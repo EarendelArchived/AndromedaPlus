@@ -1,23 +1,23 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: AlphaKR93 <alphakr93@gmail.com>
 Date: Thu, 19 Jan 2023 17:15:13 +0900
-Subject: [PATCH] Magellan Configuration
+Subject: [PATCH] AndromedaPlus Configuration
 
 
 diff --git a/src/main/java/org/bukkit/Server.java b/src/main/java/org/bukkit/Server.java
-index 6dd18dd4abeb09f27d0d04870cfb582e44c1354e..2557ca674e0809bae5701b5cc566171be4cbe195 100644
+index 6dd18dd4abeb09f27d0d04870cfb582e44c1354e..33a918c2ee84fa31f4641cd5534d6067fd8a60ae 100644
 --- a/src/main/java/org/bukkit/Server.java
 +++ b/src/main/java/org/bukkit/Server.java
 @@ -1978,6 +1978,13 @@ public interface Server extends PluginMessageRecipient, net.kyori.adventure.audi
          }
          // Andromeda end
  
-+        // Magellan start
++        // AndromedaPlus start
 +        @NotNull
-+        public org.bukkit.configuration.file.YamlConfiguration getMagellanConfiguration() {
++        public org.bukkit.configuration.file.YamlConfiguration getAndromedaPlusConfiguration() {
 +            throw new UnsupportedOperationException("Not supported yet.");
 +        }
-+        // Magellan end
++        // AndromedaPlus end
 +
          // Purpur start
          @NotNull

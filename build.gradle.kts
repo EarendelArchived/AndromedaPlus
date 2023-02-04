@@ -61,7 +61,7 @@ subprojects {
 }
 
 paperweight {
-    serverProject.set(project(":magellan-server"))
+    serverProject.set(project(":andromedaplus-server"))
 
     remapRepo.set("https://maven.fabricmc.net/")
     decompileRepo.set("https://files.minecraftforge.net/maven/")
@@ -74,10 +74,10 @@ paperweight {
             baseName("Andromeda")
 
             apiPatchDir.set(layout.projectDirectory.dir("patches/api"))
-            apiOutputDir.set(layout.projectDirectory.dir("Magellan-API"))
+            apiOutputDir.set(layout.projectDirectory.dir("AndromedaPlus-API"))
 
             serverPatchDir.set(layout.projectDirectory.dir("patches/server"))
-            serverOutputDir.set(layout.projectDirectory.dir("Magellan-Server"))
+            serverOutputDir.set(layout.projectDirectory.dir("AndromedaPlus-Server"))
         }
     }
 }

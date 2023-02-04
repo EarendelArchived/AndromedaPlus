@@ -1,11 +1,11 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: AlphaKR93 <alphakr93@gmail.com>
 Date: Thu, 19 Jan 2023 18:01:23 +0900
-Subject: [PATCH] Magellan Configuration
+Subject: [PATCH] AndromedaPlus Configuration
 
 
 diff --git a/src/main/java/io/papermc/paper/configuration/InnerClassFieldDiscoverer.java b/src/main/java/io/papermc/paper/configuration/InnerClassFieldDiscoverer.java
-index 69e92e493e5821e7b3e511f171ec6afd7ea36f0b..d9f4079f533cc8aec56e75744377a2b433b6c11b 100644
+index 69e92e493e5821e7b3e511f171ec6afd7ea36f0b..0f75ba697eee9f2a6f19b6bce8e4fbf95d50aa65 100644
 --- a/src/main/java/io/papermc/paper/configuration/InnerClassFieldDiscoverer.java
 +++ b/src/main/java/io/papermc/paper/configuration/InnerClassFieldDiscoverer.java
 @@ -151,4 +151,16 @@ public final class InnerClassFieldDiscoverer implements FieldDiscoverer<Map<Fiel
@@ -13,27 +13,27 @@ index 69e92e493e5821e7b3e511f171ec6afd7ea36f0b..d9f4079f533cc8aec56e75744377a2b4
      }
      // Andromeda end
 +
-+    // Magellan start
-+    public static FieldDiscoverer<?> magellanLevelConfiguration(Configurations.ContextMap contextMap) {
++    // AndromedaPlus start
++    public static FieldDiscoverer<?> andromedaplusLevelConfiguration(Configurations.ContextMap contextMap) {
 +        final Map<Class<?>, Object> overrides = Map.of(
-+                team.earendel.magellan.configurations.LevelConfigurations.class,
-+                new team.earendel.magellan.configurations.LevelConfigurations(
++                team.earendel.andromedaplus.configurations.LevelConfigurations.class,
++                new team.earendel.andromedaplus.configurations.LevelConfigurations(
 +                        contextMap.require(Configurations.WORLD_KEY)
 +                )
 +        );
 +        return new InnerClassFieldDiscoverer(overrides);
 +    }
-+    // Magellan end
++    // AndromedaPlus end
  }
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
-index 45a24d0f6bb4aedf40976a51a78286da51866d54..bf5d3b17e492ed7de6878040dc4ea8d1827df739 100644
+index bcdcfbcc487f5a94b3241a217728b9ab380501ca..735cd9dc6151cbe65bb15ad77caf0066b9eca130 100644
 --- a/src/main/java/net/minecraft/server/MinecraftServer.java
 +++ b/src/main/java/net/minecraft/server/MinecraftServer.java
 @@ -306,6 +306,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
      // Spigot end
      public final io.papermc.paper.configuration.PaperConfigurations paperConfigurations;
      public final team.earendel.andromeda.configurations.AndromedaConfigurations andromedaConfigurations;
-+    public final team.earendel.magellan.configurations.MagellanConfigurations magellanConfigurations;
++    public final team.earendel.andromedaplus.configurations.AndromedaPlusConfigurations andromedaplusConfigurations;
      public static long currentTickLong = 0L; // Paper
      public boolean lagging = false; // Purpur
      protected boolean upnp = false; // Purpur
@@ -41,12 +41,12 @@ index 45a24d0f6bb4aedf40976a51a78286da51866d54..bf5d3b17e492ed7de6878040dc4ea8d1
          Runtime.getRuntime().addShutdownHook(new org.bukkit.craftbukkit.util.ServerShutdownThread(this));
          this.paperConfigurations = services.paperConfigurations(); // Paper
          this.andromedaConfigurations = services.andromedaConfigurations();
-+        this.magellanConfigurations = services.magellanConfigurations();
++        this.andromedaplusConfigurations = services.andromedaplusConfigurations();
      }
      // CraftBukkit end
  
 diff --git a/src/main/java/net/minecraft/server/Services.java b/src/main/java/net/minecraft/server/Services.java
-index 9a69831c7645a00fe3b3276a82b67112f0aea5d9..35dd2f74f9e8ae1ed3117bdf2af038b0d40cb6aa 100644
+index 9a69831c7645a00fe3b3276a82b67112f0aea5d9..ee7d37c7ab23d1bc8cb906673a9e1b43c909d258 100644
 --- a/src/main/java/net/minecraft/server/Services.java
 +++ b/src/main/java/net/minecraft/server/Services.java
 @@ -8,10 +8,10 @@ import net.minecraft.server.players.GameProfileCache;
@@ -54,11 +54,11 @@ index 9a69831c7645a00fe3b3276a82b67112f0aea5d9..35dd2f74f9e8ae1ed3117bdf2af038b0
  
  // Paper start
 -public record Services(MinecraftSessionService sessionService, SignatureValidator serviceSignatureValidator, GameProfileRepository profileRepository, GameProfileCache profileCache, @javax.annotation.Nullable io.papermc.paper.configuration.PaperConfigurations paperConfigurations, @javax.annotation.Nullable team.earendel.andromeda.configurations.AndromedaConfigurations andromedaConfigurations) { // Andromeda
-+public record Services(MinecraftSessionService sessionService, SignatureValidator serviceSignatureValidator, GameProfileRepository profileRepository, GameProfileCache profileCache, @javax.annotation.Nullable io.papermc.paper.configuration.PaperConfigurations paperConfigurations, @javax.annotation.Nullable team.earendel.andromeda.configurations.AndromedaConfigurations andromedaConfigurations, @javax.annotation.Nullable team.earendel.magellan.configurations.MagellanConfigurations magellanConfigurations) { // Andromeda // Magellan
++public record Services(MinecraftSessionService sessionService, SignatureValidator serviceSignatureValidator, GameProfileRepository profileRepository, GameProfileCache profileCache, @javax.annotation.Nullable io.papermc.paper.configuration.PaperConfigurations paperConfigurations, @javax.annotation.Nullable team.earendel.andromeda.configurations.AndromedaConfigurations andromedaConfigurations, @javax.annotation.Nullable team.earendel.andromedaplus.configurations.AndromedaPlusConfigurations andromedaplusConfigurations) { // Andromeda // AndromedaPlus
  
      public Services(MinecraftSessionService sessionService, SignatureValidator signatureValidator, GameProfileRepository profileRepository, GameProfileCache profileCache) {
 -        this(sessionService, signatureValidator, profileRepository, profileCache, null, null); // Andromeda
-+        this(sessionService, signatureValidator, profileRepository, profileCache, null, null, null); // Andromeda // Magellan
++        this(sessionService, signatureValidator, profileRepository, profileCache, null, null, null); // Andromeda // AndromedaPlus
      }
  
      @Override
@@ -66,12 +66,12 @@ index 9a69831c7645a00fe3b3276a82b67112f0aea5d9..35dd2f74f9e8ae1ed3117bdf2af038b0
      }
      // Andromeda end
  
-+    // Magellan start
++    // AndromedaPlus start
 +    @Override
-+    public team.earendel.magellan.configurations.MagellanConfigurations magellanConfigurations() {
-+        return java.util.Objects.requireNonNull(this.magellanConfigurations);
++    public team.earendel.andromedaplus.configurations.AndromedaPlusConfigurations andromedaplusConfigurations() {
++        return java.util.Objects.requireNonNull(this.andromedaplusConfigurations);
 +    }
-+    // Magellan end
++    // AndromedaPlus end
 +
      public static final String USERID_CACHE_FILE = "usercache.json"; // Paper - private -> public
  
@@ -81,27 +81,27 @@ index 9a69831c7645a00fe3b3276a82b67112f0aea5d9..35dd2f74f9e8ae1ed3117bdf2af038b0
          final java.nio.file.Path andromedaConfigurationDirPath = ((File) optionSet.valueOf("andromeda-configurations-directory")).toPath();
          team.earendel.andromeda.configurations.AndromedaConfigurations andromedaConfigurations = team.earendel.andromeda.configurations.AndromedaConfigurations.setup(legacyAndromedaConfigurationPath, andromedaConfigurationDirPath);
 -        return new Services(minecraftSessionService, signatureValidator, gameProfileRepository, gameProfileCache, paperConfigurations, andromedaConfigurations);
-+        // Magellan start
-+        final java.nio.file.Path legacyMagellanConfigurationPath = ((File) optionSet.valueOf("magellan-configurations")).toPath();
-+        final java.nio.file.Path magellanConfigurationDirPath = ((File) optionSet.valueOf("magellan-configurations-directory")).toPath();
-+        team.earendel.magellan.configurations.MagellanConfigurations magellanConfigurations = team.earendel.magellan.configurations.MagellanConfigurations.setup(legacyMagellanConfigurationPath, magellanConfigurationDirPath);
-+        return new Services(minecraftSessionService, signatureValidator, gameProfileRepository, gameProfileCache, paperConfigurations, andromedaConfigurations, magellanConfigurations);
-+        // Magellan end
++        // AndromedaPlus start
++        final java.nio.file.Path legacyAndromedaPlusConfigurationPath = ((File) optionSet.valueOf("andromedaplus-configurations")).toPath();
++        final java.nio.file.Path andromedaplusConfigurationDirPath = ((File) optionSet.valueOf("andromedaplus-configurations-directory")).toPath();
++        team.earendel.andromedaplus.configurations.AndromedaPlusConfigurations andromedaplusConfigurations = team.earendel.andromedaplus.configurations.AndromedaPlusConfigurations.setup(legacyAndromedaPlusConfigurationPath, andromedaplusConfigurationDirPath);
++        return new Services(minecraftSessionService, signatureValidator, gameProfileRepository, gameProfileCache, paperConfigurations, andromedaConfigurations, andromedaplusConfigurations);
++        // AndromedaPlus end
          // Andromeda end
          // Paper end
      }
 diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
-index ed93fdcd80cc2d78fe10111fe5228bb06b82435e..80b1b2f05d12c5dd9afc41bb69d073df7a92f213 100644
+index ed93fdcd80cc2d78fe10111fe5228bb06b82435e..ac9041f03cbcb0c1c73b29e69db93b01492de840 100644
 --- a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
 +++ b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
 @@ -202,6 +202,10 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
          andromedaConfigurations.initializeGlobalConfiguration();
          andromedaConfigurations.initializeWorldDefaultsConfiguration();
          // Andromeda end
-+        // Magellan start
-+        magellanConfigurations.initializeGlobalConfiguration();
-+        magellanConfigurations.initializeWorldDefaultsConfiguration();
-+        // Magellan end
++        // AndromedaPlus start
++        andromedaplusConfigurations.initializeGlobalConfiguration();
++        andromedaplusConfigurations.initializeWorldDefaultsConfiguration();
++        // AndromedaPlus end
          // Paper start - moved up to right after PlayerList creation but before file load/save
          if (this.convertOldUsers()) {
              this.getProfileCache().save(false); // Paper
@@ -109,12 +109,12 @@ index ed93fdcd80cc2d78fe10111fe5228bb06b82435e..80b1b2f05d12c5dd9afc41bb69d073df
          thread.start(); // Paper - start console thread after MinecraftServer.console & PaperConfig are initialized
          io.papermc.paper.command.PaperCommands.registerCommands(this);
          team.earendel.andromeda.commands.AndromedaCommands.registerCommands(this);
-+        team.earendel.magellan.commands.MagellanCommands.registerCommands(this);
++        team.earendel.andromedaplus.commands.AndromedaPlusCommands.registerCommands(this);
          com.destroystokyo.paper.Metrics.PaperMetrics.startMetrics();
          // Purpur start
          try {
 diff --git a/src/main/java/net/minecraft/server/level/ServerLevel.java b/src/main/java/net/minecraft/server/level/ServerLevel.java
-index 3d0f8578eb31d3e718df9641033641c93b360570..065764a4ce125cea486a039d8335fd78ab153446 100644
+index 3d0f8578eb31d3e718df9641033641c93b360570..0d333471db16946109227dbd5fbff76db9b20ea4 100644
 --- a/src/main/java/net/minecraft/server/level/ServerLevel.java
 +++ b/src/main/java/net/minecraft/server/level/ServerLevel.java
 @@ -530,7 +530,7 @@ public class ServerLevel extends Level implements WorldGenLevel {
@@ -122,24 +122,24 @@ index 3d0f8578eb31d3e718df9641033641c93b360570..065764a4ce125cea486a039d8335fd78
          // Holder holder = worlddimension.type(); // CraftBukkit - decompile error
          // Objects.requireNonNull(minecraftserver); // CraftBukkit - decompile error
 -        super(iworlddataserver, resourcekey, worlddimension.type(), minecraftserver::getProfiler, false, flag, i, minecraftserver.getMaxChainedNeighborUpdates(), gen, biomeProvider, env, spigotConfig -> minecraftserver.paperConfigurations.createWorldConfig(io.papermc.paper.configuration.PaperConfigurations.createWorldContextMap(convertable_conversionsession.levelDirectory.path(), iworlddataserver.getLevelName(), resourcekey.location(), spigotConfig)), spigotConfig -> minecraftserver.andromedaConfigurations.createWorldConfig(io.papermc.paper.configuration.PaperConfigurations.createWorldContextMap(convertable_conversionsession.levelDirectory.path(), iworlddataserver.getLevelName(), resourcekey.location(), spigotConfig)), executor); // Paper - Async-Anti-Xray - Pass executor // Andromeda
-+        super(iworlddataserver, resourcekey, worlddimension.type(), minecraftserver::getProfiler, false, flag, i, minecraftserver.getMaxChainedNeighborUpdates(), gen, biomeProvider, env, spigotConfig -> minecraftserver.paperConfigurations.createWorldConfig(io.papermc.paper.configuration.PaperConfigurations.createWorldContextMap(convertable_conversionsession.levelDirectory.path(), iworlddataserver.getLevelName(), resourcekey.location(), spigotConfig)), spigotConfig -> minecraftserver.andromedaConfigurations.createWorldConfig(io.papermc.paper.configuration.PaperConfigurations.createWorldContextMap(convertable_conversionsession.levelDirectory.path(), iworlddataserver.getLevelName(), resourcekey.location(), spigotConfig)), spigotConfig -> minecraftserver.magellanConfigurations.createWorldConfig(io.papermc.paper.configuration.PaperConfigurations.createWorldContextMap(convertable_conversionsession.levelDirectory.path(), iworlddataserver.getLevelName(), resourcekey.location(), spigotConfig)), executor); // Paper - Async-Anti-Xray - Pass executor // Andromeda // Magellan
++        super(iworlddataserver, resourcekey, worlddimension.type(), minecraftserver::getProfiler, false, flag, i, minecraftserver.getMaxChainedNeighborUpdates(), gen, biomeProvider, env, spigotConfig -> minecraftserver.paperConfigurations.createWorldConfig(io.papermc.paper.configuration.PaperConfigurations.createWorldContextMap(convertable_conversionsession.levelDirectory.path(), iworlddataserver.getLevelName(), resourcekey.location(), spigotConfig)), spigotConfig -> minecraftserver.andromedaConfigurations.createWorldConfig(io.papermc.paper.configuration.PaperConfigurations.createWorldContextMap(convertable_conversionsession.levelDirectory.path(), iworlddataserver.getLevelName(), resourcekey.location(), spigotConfig)), spigotConfig -> minecraftserver.andromedaplusConfigurations.createWorldConfig(io.papermc.paper.configuration.PaperConfigurations.createWorldContextMap(convertable_conversionsession.levelDirectory.path(), iworlddataserver.getLevelName(), resourcekey.location(), spigotConfig)), executor); // Paper - Async-Anti-Xray - Pass executor // Andromeda // AndromedaPlus
          this.pvpMode = minecraftserver.isPvpAllowed();
          this.convertable = convertable_conversionsession;
          this.uuid = WorldUUID.getUUID(convertable_conversionsession.levelDirectory.path().toFile());
 diff --git a/src/main/java/net/minecraft/world/level/Level.java b/src/main/java/net/minecraft/world/level/Level.java
-index 65cf213c6bf41f6a29c508ebcf3b13f9fe26df37..ce871be3a145e270a8d156dcde43a8ba57a5167b 100644
+index 4c112759d5a65b49e93fd45f257f57895a9af395..48239d360fcaba6eb1ffe8548fe621a106fdc5cd 100644
 --- a/src/main/java/net/minecraft/world/level/Level.java
 +++ b/src/main/java/net/minecraft/world/level/Level.java
 @@ -177,6 +177,12 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
          return this.andromedaLevelConfiguration;
      }
      // Andromeda end
-+    // Magellan start
-+    private final team.earendel.magellan.configurations.LevelConfigurations magellanLevelConfiguration;
-+    public team.earendel.magellan.configurations.LevelConfigurations magellanLevelConfiguration() {
-+        return this.magellanLevelConfiguration;
++    // AndromedaPlus start
++    private final team.earendel.andromedaplus.configurations.LevelConfigurations andromedaplusLevelConfiguration;
++    public team.earendel.andromedaplus.configurations.LevelConfigurations andromedaplusLevelConfiguration() {
++        return this.andromedaplusLevelConfiguration;
 +    }
-+    // Magellan end
++    // AndromedaPlus end
      public final com.destroystokyo.paper.antixray.ChunkPacketBlockController chunkPacketBlockController; // Paper - Anti-Xray
      public final org.purpurmc.purpur.PurpurWorldConfig purpurConfig; // Purpur
  
@@ -148,23 +148,23 @@ index 65cf213c6bf41f6a29c508ebcf3b13f9fe26df37..ce871be3a145e270a8d156dcde43a8ba
      // Pufferfish end
  
 -    protected Level(WritableLevelData worlddatamutable, ResourceKey<Level> resourcekey, Holder<DimensionType> holder, Supplier<ProfilerFiller> supplier, boolean flag, boolean flag1, long i, int j, org.bukkit.generator.ChunkGenerator gen, org.bukkit.generator.BiomeProvider biomeProvider, org.bukkit.World.Environment env, java.util.function.Function<org.spigotmc.SpigotWorldConfig, io.papermc.paper.configuration.WorldConfiguration> paperWorldConfigCreator, java.util.function.Function<org.spigotmc.SpigotWorldConfig, team.earendel.andromeda.configurations.LevelConfigurations> andromedaLevelConfigurationCreator, java.util.concurrent.Executor executor) { // Paper - Async-Anti-Xray - Pass executor
-+    protected Level(WritableLevelData worlddatamutable, ResourceKey<Level> resourcekey, Holder<DimensionType> holder, Supplier<ProfilerFiller> supplier, boolean flag, boolean flag1, long i, int j, org.bukkit.generator.ChunkGenerator gen, org.bukkit.generator.BiomeProvider biomeProvider, org.bukkit.World.Environment env, java.util.function.Function<org.spigotmc.SpigotWorldConfig, io.papermc.paper.configuration.WorldConfiguration> paperWorldConfigCreator, java.util.function.Function<org.spigotmc.SpigotWorldConfig, team.earendel.andromeda.configurations.LevelConfigurations> andromedaLevelConfigurationCreator, java.util.function.Function<org.spigotmc.SpigotWorldConfig, team.earendel.magellan.configurations.LevelConfigurations> magellanLevelConfigurationCreator, java.util.concurrent.Executor executor) { // Paper - Async-Anti-Xray - Pass executor // Magellan
++    protected Level(WritableLevelData worlddatamutable, ResourceKey<Level> resourcekey, Holder<DimensionType> holder, Supplier<ProfilerFiller> supplier, boolean flag, boolean flag1, long i, int j, org.bukkit.generator.ChunkGenerator gen, org.bukkit.generator.BiomeProvider biomeProvider, org.bukkit.World.Environment env, java.util.function.Function<org.spigotmc.SpigotWorldConfig, io.papermc.paper.configuration.WorldConfiguration> paperWorldConfigCreator, java.util.function.Function<org.spigotmc.SpigotWorldConfig, team.earendel.andromeda.configurations.LevelConfigurations> andromedaLevelConfigurationCreator, java.util.function.Function<org.spigotmc.SpigotWorldConfig, team.earendel.andromedaplus.configurations.LevelConfigurations> andromedaplusLevelConfigurationCreator, java.util.concurrent.Executor executor) { // Paper - Async-Anti-Xray - Pass executor // AndromedaPlus
          this.spigotConfig = new org.spigotmc.SpigotWorldConfig(((net.minecraft.world.level.storage.PrimaryLevelData) worlddatamutable).getLevelName()); // Spigot
          this.paperConfig = paperWorldConfigCreator.apply(this.spigotConfig); // Paper
          this.andromedaLevelConfiguration = andromedaLevelConfigurationCreator.apply(this.spigotConfig); // Andromeda
-+        this.magellanLevelConfiguration = magellanLevelConfigurationCreator.apply(this.spigotConfig); // Magellan
++        this.andromedaplusLevelConfiguration = andromedaplusLevelConfigurationCreator.apply(this.spigotConfig); // AndromedaPlus
          this.purpurConfig = new org.purpurmc.purpur.PurpurWorldConfig(((net.minecraft.world.level.storage.PrimaryLevelData) worlddatamutable).getLevelName(), env); // Purpur
          this.playerBreedingCooldowns = this.getNewBreedingCooldownCache(); // Purpur
          this.generator = gen;
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index f14bebb941a9633198ec1f6eb7043c2651504327..b38ff43329f3ddceef89fc3dd854763a962433ae 100644
+index 71dc8ea1de348751ce3e5d0ca5eba277ce5979fc..67396c5c60ebc7e30e6250d4d77c56d1c95fb28b 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 @@ -1033,6 +1033,7 @@ public final class CraftServer implements Server {
          org.spigotmc.SpigotConfig.init((File) console.options.valueOf("spigot-settings")); // Spigot
          this.console.paperConfigurations.reloadConfigs(this.console);
          this.console.andromedaConfigurations.reloadConfigurations(this.console); // Andromeda
-+        this.console.magellanConfigurations.reloadConfigurations(this.console); // Magellan
++        this.console.andromedaplusConfigurations.reloadConfigurations(this.console); // AndromedaPlus
          org.purpurmc.purpur.PurpurConfig.init((File) console.options.valueOf("purpur-settings")); // Purpur
          for (ServerLevel world : this.console.getAllLevels()) {
              // world.serverLevelData.setDifficulty(config.difficulty); // Paper - per level difficulty
@@ -172,47 +172,47 @@ index f14bebb941a9633198ec1f6eb7043c2651504327..b38ff43329f3ddceef89fc3dd854763a
          }
          // Andromeda end
  
-+        // Magellan start
++        // AndromedaPlus start
 +        @Override
-+        public YamlConfiguration getMagellanConfiguration() {
-+            return CraftServer.this.console.magellanConfigurations.createLegacyObject(CraftServer.this.console);
++        public YamlConfiguration getAndromedaPlusConfiguration() {
++            return CraftServer.this.console.andromedaplusConfigurations.createLegacyObject(CraftServer.this.console);
 +        }
-+        // Magellan end
++        // AndromedaPlus end
 +
          // Purpur start
          @Override
          public YamlConfiguration getPurpurConfig() {
 diff --git a/src/main/java/org/bukkit/craftbukkit/Main.java b/src/main/java/org/bukkit/craftbukkit/Main.java
-index 193487b0944cd4bb200ae621c817708e873d95b5..0a20491fe6dac8184c9bb7d991a031a6ab54e1c1 100644
+index 193487b0944cd4bb200ae621c817708e873d95b5..277b74edba8df861620b11265df2a1cadf82a44b 100644
 --- a/src/main/java/org/bukkit/craftbukkit/Main.java
 +++ b/src/main/java/org/bukkit/craftbukkit/Main.java
 @@ -179,6 +179,19 @@ public class Main {
                          .describedAs("Yml file");
                  // Andromeda end
  
-+                // Magellan start
-+                acceptsAll(asList("magellan-dir", "magellan-configurations-directory"), "Directory for Magellan configurations")
++                // AndromedaPlus start
++                acceptsAll(asList("andromedaplus-dir", "andromedaplus-configurations-directory"), "Directory for AndromedaPlus configurations")
 +                        .withRequiredArg()
 +                        .ofType(File.class)
 +                        .defaultsTo(new File(io.papermc.paper.configuration.PaperConfigurations.CONFIG_DIR))
 +                        .describedAs("Config directory");
-+                acceptsAll(asList("magellan", "magellan-configurations"), "File for Magellan configurations")
++                acceptsAll(asList("andromedaplus", "andromedaplus-configurations"), "File for AndromedaPlus configurations")
 +                        .withRequiredArg()
 +                        .ofType(File.class)
-+                        .defaultsTo(new File("magellan.yml"))
++                        .defaultsTo(new File("andromedaplus.yml"))
 +                        .describedAs("Yml file");
-+                // Magellan end
++                // AndromedaPlus end
 +
                  // Purpur Start
                  acceptsAll(asList("purpur", "purpur-settings"), "File for purpur settings")
                      .withRequiredArg()
-diff --git a/src/main/java/team/earendel/magellan/commands/MagellanCommand.java b/src/main/java/team/earendel/magellan/commands/MagellanCommand.java
+diff --git a/src/main/java/team/earendel/andromedaplus/commands/AndromedaPlusCommand.java b/src/main/java/team/earendel/andromedaplus/commands/AndromedaPlusCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..8bd6953a0921bab93a1afe8a9e295f771c68daed
+index 0000000000000000000000000000000000000000..aa8a1855fed599d867c3c7361279999dc003cdb6
 --- /dev/null
-+++ b/src/main/java/team/earendel/magellan/commands/MagellanCommand.java
++++ b/src/main/java/team/earendel/andromedaplus/commands/AndromedaPlusCommand.java
 @@ -0,0 +1,126 @@
-+package team.earendel.magellan.commands;
++package team.earendel.andromedaplus.commands;
 +
 +import io.papermc.paper.command.CommandUtil;
 +import it.unimi.dsi.fastutil.Pair;
@@ -227,9 +227,9 @@ index 0000000000000000000000000000000000000000..8bd6953a0921bab93a1afe8a9e295f77
 +import org.checkerframework.checker.nullness.qual.NonNull;
 +import org.checkerframework.checker.nullness.qual.Nullable;
 +import org.checkerframework.framework.qual.DefaultQualifier;
-+import team.earendel.magellan.commands.subcommands.MagellanSubCommand;
-+import team.earendel.magellan.commands.subcommands.ReloadCommand;
-+import team.earendel.magellan.commands.subcommands.VersionCommand;
++import team.earendel.andromedaplus.commands.subcommands.AndromedaPlusSubCommand;
++import team.earendel.andromedaplus.commands.subcommands.ReloadCommand;
++import team.earendel.andromedaplus.commands.subcommands.VersionCommand;
 +
 +import java.util.*;
 +import java.util.stream.Collectors;
@@ -237,10 +237,10 @@ index 0000000000000000000000000000000000000000..8bd6953a0921bab93a1afe8a9e295f77
 +import static net.kyori.adventure.text.Component.text;
 +
 +@DefaultQualifier(NonNull.class)
-+public class MagellanCommand extends Command {
++public class AndromedaPlusCommand extends Command {
 +
-+    private static final Map<String, MagellanSubCommand> SUB_COMMANDS = Util.make(() -> {
-+        final Map<Set<String>, MagellanSubCommand> commands = new HashMap<>();
++    private static final Map<String, AndromedaPlusSubCommand> SUB_COMMANDS = Util.make(() -> {
++        final Map<Set<String>, AndromedaPlusSubCommand> commands = new HashMap<>();
 +
 +        commands.put(Set.of("reload"), new ReloadCommand());
 +        commands.put(Set.of("version"), new VersionCommand());
@@ -261,17 +261,17 @@ index 0000000000000000000000000000000000000000..8bd6953a0921bab93a1afe8a9e295f77
 +                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 +    });
 +
-+    public MagellanCommand(final String name) {
++    public AndromedaPlusCommand(final String name) {
 +        super(name);
 +
 +        final PluginManager pluginManager = Bukkit.getServer().getPluginManager();
 +
 +        final List<String> permissions = new ArrayList<>();
-+        permissions.add("bukkit.command.magellan");
-+        permissions.addAll(SUB_COMMANDS.keySet().stream().map(s -> "bukkit.command.magellan." + s).toList());
++        permissions.add("bukkit.command.andromedaplus");
++        permissions.addAll(SUB_COMMANDS.keySet().stream().map(s -> "bukkit.command.andromedaplus." + s).toList());
 +
-+        this.description = "Magellan related commands";
-+        this.usageMessage = String.format("/magellan [%s]", String.join("|", SUB_COMMANDS.keySet()));
++        this.description = "AndromedaPlus related commands";
++        this.usageMessage = String.format("/andromedaplus [%s]", String.join("|", SUB_COMMANDS.keySet()));
 +        this.setPermission(String.join(";", permissions));
 +
 +        for (final String perm : permissions)
@@ -283,7 +283,7 @@ index 0000000000000000000000000000000000000000..8bd6953a0921bab93a1afe8a9e295f77
 +        if (args.length <= 1)
 +            return CommandUtil.getListMatchingLast(sender, args, SUB_COMMANDS.keySet());
 +
-+        final @Nullable Pair<String, MagellanSubCommand> subCommand = resolveSubCommand(args[0]);
++        final @Nullable Pair<String, AndromedaPlusSubCommand> subCommand = resolveSubCommand(args[0]);
 +        if (subCommand != null)
 +            return subCommand.second().tabComplete(sender, subCommand.first(), Arrays.copyOfRange(args, 1, args.length));
 +
@@ -299,7 +299,7 @@ index 0000000000000000000000000000000000000000..8bd6953a0921bab93a1afe8a9e295f77
 +            return false;
 +        }
 +
-+        final @Nullable Pair<String, MagellanSubCommand> subCommand = resolveSubCommand(args[0]);
++        final @Nullable Pair<String, AndromedaPlusSubCommand> subCommand = resolveSubCommand(args[0]);
 +
 +        if (subCommand == null) {
 +            sender.sendMessage(text("Usage: " + this.usageMessage, NamedTextColor.RED));
@@ -312,9 +312,9 @@ index 0000000000000000000000000000000000000000..8bd6953a0921bab93a1afe8a9e295f77
 +        return subCommand.second().execute(sender, subCommand.first(), choppedArgs);
 +    }
 +
-+    private static @Nullable Pair<String, MagellanSubCommand> resolveSubCommand(String label) {
++    private static @Nullable Pair<String, AndromedaPlusSubCommand> resolveSubCommand(String label) {
 +        label = label.toLowerCase(Locale.ENGLISH);
-+        @Nullable MagellanSubCommand subCommand = SUB_COMMANDS.get(label);
++        @Nullable AndromedaPlusSubCommand subCommand = SUB_COMMANDS.get(label);
 +
 +        if (subCommand == null) {
 +            final @Nullable String command = ALIASES.get(label);
@@ -331,20 +331,20 @@ index 0000000000000000000000000000000000000000..8bd6953a0921bab93a1afe8a9e295f77
 +    }
 +
 +    private static boolean testPermission(final CommandSender sender, final String permission) {
-+        if (sender.hasPermission("bukkit.command.magellan." + permission) || sender.hasPermission("bukkit.command.magellan"))
++        if (sender.hasPermission("bukkit.command.andromedaplus." + permission) || sender.hasPermission("bukkit.command.andromedaplus"))
 +            return true;
 +
 +        sender.sendMessage(Bukkit.permissionMessage());
 +        return false;
 +    }
 +}
-diff --git a/src/main/java/team/earendel/magellan/commands/MagellanCommands.java b/src/main/java/team/earendel/magellan/commands/MagellanCommands.java
+diff --git a/src/main/java/team/earendel/andromedaplus/commands/AndromedaPlusCommands.java b/src/main/java/team/earendel/andromedaplus/commands/AndromedaPlusCommands.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..47ce9a971b67a843d6e548ae6c165f3b2df84639
+index 0000000000000000000000000000000000000000..2a2c599c1ce413495e2231650fae16f80f7cc3ab
 --- /dev/null
-+++ b/src/main/java/team/earendel/magellan/commands/MagellanCommands.java
++++ b/src/main/java/team/earendel/andromedaplus/commands/AndromedaPlusCommands.java
 @@ -0,0 +1,25 @@
-+package team.earendel.magellan.commands;
++package team.earendel.andromedaplus.commands;
 +
 +import net.minecraft.server.MinecraftServer;
 +import org.bukkit.command.Command;
@@ -355,27 +355,27 @@ index 0000000000000000000000000000000000000000..47ce9a971b67a843d6e548ae6c165f3b
 +import java.util.Map;
 +
 +@DefaultQualifier(NonNull.class)
-+public final class MagellanCommands {
++public final class AndromedaPlusCommands {
 +
-+    private MagellanCommands() {}
++    private AndromedaPlusCommands() {}
 +
 +    private static final Map<String, Command> COMMANDS = new HashMap<>();
 +    static {
-+        COMMANDS.put("magellan", new MagellanCommand("magellan"));
++        COMMANDS.put("andromedaplus", new AndromedaPlusCommand("andromedaplus"));
 +    }
 +
 +    public static void registerCommands(final MinecraftServer server) {
-+        COMMANDS.forEach((s, command) -> server.server.getCommandMap().register(s, "Magellan", command));
++        COMMANDS.forEach((s, command) -> server.server.getCommandMap().register(s, "AndromedaPlus", command));
 +    }
 +
 +}
-diff --git a/src/main/java/team/earendel/magellan/commands/subcommands/MagellanSubCommand.java b/src/main/java/team/earendel/magellan/commands/subcommands/MagellanSubCommand.java
+diff --git a/src/main/java/team/earendel/andromedaplus/commands/subcommands/AndromedaPlusSubCommand.java b/src/main/java/team/earendel/andromedaplus/commands/subcommands/AndromedaPlusSubCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..2fbf18b86237883138b3d64c01e640824f08fee7
+index 0000000000000000000000000000000000000000..1f99baa15eb767487b424c142e65fcacfdf74f25
 --- /dev/null
-+++ b/src/main/java/team/earendel/magellan/commands/subcommands/MagellanSubCommand.java
++++ b/src/main/java/team/earendel/andromedaplus/commands/subcommands/AndromedaPlusSubCommand.java
 @@ -0,0 +1,17 @@
-+package team.earendel.magellan.commands.subcommands;
++package team.earendel.andromedaplus.commands.subcommands;
 +
 +import org.bukkit.command.CommandSender;
 +import org.checkerframework.checker.nullness.qual.NonNull;
@@ -385,20 +385,20 @@ index 0000000000000000000000000000000000000000..2fbf18b86237883138b3d64c01e64082
 +import java.util.List;
 +
 +@DefaultQualifier(NonNull.class)
-+public interface MagellanSubCommand {
++public interface AndromedaPlusSubCommand {
 +    boolean execute(CommandSender sender, String subCommand, String[] args);
 +
 +    default List<String> tabComplete(final CommandSender sender, final String subCommand, final String[] args) {
 +        return Collections.emptyList();
 +    }
 +}
-diff --git a/src/main/java/team/earendel/magellan/commands/subcommands/ReloadCommand.java b/src/main/java/team/earendel/magellan/commands/subcommands/ReloadCommand.java
+diff --git a/src/main/java/team/earendel/andromedaplus/commands/subcommands/ReloadCommand.java b/src/main/java/team/earendel/andromedaplus/commands/subcommands/ReloadCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..bf047ce32582b77b348903dd5f2553770dc1aa0d
+index 0000000000000000000000000000000000000000..b2743a8ab62fd1354900f71f14aa0a0ec2267ec8
 --- /dev/null
-+++ b/src/main/java/team/earendel/magellan/commands/subcommands/ReloadCommand.java
++++ b/src/main/java/team/earendel/andromedaplus/commands/subcommands/ReloadCommand.java
 @@ -0,0 +1,28 @@
-+package team.earendel.magellan.commands.subcommands;
++package team.earendel.andromedaplus.commands.subcommands;
 +
 +import net.kyori.adventure.text.format.NamedTextColor;
 +import net.minecraft.server.MinecraftServer;
@@ -408,7 +408,7 @@ index 0000000000000000000000000000000000000000..bf047ce32582b77b348903dd5f255377
 +
 +import static net.kyori.adventure.text.Component.text;
 +
-+public class ReloadCommand implements MagellanSubCommand {
++public class ReloadCommand implements AndromedaPlusSubCommand {
 +
 +    @Override
 +    public boolean execute(CommandSender sender, String subCommand, String[] args) {
@@ -420,98 +420,40 @@ index 0000000000000000000000000000000000000000..bf047ce32582b77b348903dd5f255377
 +        Command.broadcastCommandMessage(sender, text("If you encounter any issues please use the /stop command to restart your server.", NamedTextColor.RED));
 +
 +        MinecraftServer server = ((CraftServer) sender.getServer()).getServer();
-+        server.magellanConfigurations.reloadConfigurations(server);
++        server.andromedaplusConfigurations.reloadConfigurations(server);
 +        server.server.reloadCount++;
 +
-+        Command.broadcastCommandMessage(sender, text("Successfully reloaded Magellan configuration files.", NamedTextColor.GREEN));
++        Command.broadcastCommandMessage(sender, text("Successfully reloaded AndromedaPlus configuration files.", NamedTextColor.GREEN));
 +    }
 +}
-diff --git a/src/main/java/team/earendel/magellan/commands/subcommands/VersionCommand.java b/src/main/java/team/earendel/magellan/commands/subcommands/VersionCommand.java
+diff --git a/src/main/java/team/earendel/andromedaplus/commands/subcommands/VersionCommand.java b/src/main/java/team/earendel/andromedaplus/commands/subcommands/VersionCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..43147bef990a1ca041bce8d94e7abc5b786a0bac
+index 0000000000000000000000000000000000000000..e87e656276e055ad125f4dfa79ba542aaca96ca9
 --- /dev/null
-+++ b/src/main/java/team/earendel/magellan/commands/subcommands/VersionCommand.java
++++ b/src/main/java/team/earendel/andromedaplus/commands/subcommands/VersionCommand.java
 @@ -0,0 +1,15 @@
-+package team.earendel.magellan.commands.subcommands;
++package team.earendel.andromedaplus.commands.subcommands;
 +
 +import net.minecraft.server.MinecraftServer;
 +import org.bukkit.command.Command;
 +import org.bukkit.command.CommandSender;
 +import org.checkerframework.checker.nullness.qual.Nullable;
 +
-+public class VersionCommand implements MagellanSubCommand {
++public class VersionCommand implements AndromedaPlusSubCommand {
 +    @Override
 +    public boolean execute(CommandSender sender, String subCommand, String[] args) {
 +        final @Nullable Command ver = MinecraftServer.getServer().server.getCommandMap().getCommand("version");
-+        if (ver != null) ver.execute(sender, "magellan", new String[0]);
++        if (ver != null) ver.execute(sender, "andromedaplus", new String[0]);
 +        return true;
 +    }
 +}
-diff --git a/src/main/java/team/earendel/magellan/configurations/GlobalConfiguration.java b/src/main/java/team/earendel/magellan/configurations/GlobalConfiguration.java
+diff --git a/src/main/java/team/earendel/andromedaplus/configurations/AndromedaPlusConfigurations.java b/src/main/java/team/earendel/andromedaplus/configurations/AndromedaPlusConfigurations.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..d16f47f5e683084366f2c1527070045b739d51bf
+index 0000000000000000000000000000000000000000..d15c3cd357a992690bc84007ad0c424c124c975c
 --- /dev/null
-+++ b/src/main/java/team/earendel/magellan/configurations/GlobalConfiguration.java
-@@ -0,0 +1,22 @@
-+package team.earendel.magellan.configurations;
-+
-+import io.papermc.paper.configuration.Configuration;
-+import io.papermc.paper.configuration.ConfigurationPart;
-+import org.spongepowered.configurate.objectmapping.meta.Setting;
-+
-+@SuppressWarnings({"CanBeFinal", "FieldCanBeLocal", "FieldMayBeFinal", "NotNullFieldNotInitialized", "InnerClassMayBeStatic"})
-+public class GlobalConfiguration extends ConfigurationPart {
-+    static final int CURRENT_VERSION = 1;
-+    private static GlobalConfiguration instance;
-+
-+    public static GlobalConfiguration get() {
-+        return instance;
-+    }
-+
-+    static void set(GlobalConfiguration instance) {
-+        GlobalConfiguration.instance = instance;
-+    }
-+
-+    @Setting(Configuration.VERSION_FIELD)
-+    public int version = CURRENT_VERSION;
-+}
-diff --git a/src/main/java/team/earendel/magellan/configurations/LevelConfigurations.java b/src/main/java/team/earendel/magellan/configurations/LevelConfigurations.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..fdcb1f45101c241004844b7b43300bb37020ed6b
---- /dev/null
-+++ b/src/main/java/team/earendel/magellan/configurations/LevelConfigurations.java
-@@ -0,0 +1,24 @@
-+package team.earendel.magellan.configurations;
-+
-+import io.papermc.paper.configuration.Configuration;
-+import io.papermc.paper.configuration.ConfigurationPart;
-+import io.papermc.paper.configuration.PaperConfigurations;
-+import net.minecraft.resources.ResourceLocation;
-+import org.spongepowered.configurate.objectmapping.meta.Setting;
-+
-+@SuppressWarnings({"FieldCanBeLocal", "FieldMayBeFinal", "NotNullFieldNotInitialized", "InnerClassMayBeStatic"})
-+public class LevelConfigurations extends ConfigurationPart {
-+    public static final int CURRENT_VERSION = 1;
-+
-+    private transient final ResourceLocation worldKey;
-+    public LevelConfigurations(ResourceLocation worldKey) {
-+        this.worldKey = worldKey;
-+    }
-+
-+    public boolean isDefault() {
-+        return this.worldKey.equals(PaperConfigurations.WORLD_DEFAULTS_KEY);
-+    }
-+
-+    @Setting(Configuration.VERSION_FIELD)
-+    public int version = CURRENT_VERSION;
-+}
-diff --git a/src/main/java/team/earendel/magellan/configurations/MagellanConfigurations.java b/src/main/java/team/earendel/magellan/configurations/MagellanConfigurations.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..b4a507315b2e3fbb308e5ad575b065fbae5839cf
---- /dev/null
-+++ b/src/main/java/team/earendel/magellan/configurations/MagellanConfigurations.java
++++ b/src/main/java/team/earendel/andromedaplus/configurations/AndromedaPlusConfigurations.java
 @@ -0,0 +1,331 @@
-+package team.earendel.magellan.configurations;
++package team.earendel.andromedaplus.configurations;
 +
 +import com.google.common.collect.Table;
 +import com.mojang.logging.LogUtils;
@@ -559,35 +501,35 @@ index 0000000000000000000000000000000000000000..b4a507315b2e3fbb308e5ad575b065fb
 +import static io.leangen.geantyref.GenericTypeReflector.erase;
 +
 +@SuppressWarnings("Convert2Diamond")
-+public class MagellanConfigurations extends Configurations<GlobalConfiguration, LevelConfigurations> {
++public class AndromedaPlusConfigurations extends Configurations<GlobalConfiguration, LevelConfigurations> {
 +
 +    private static final Logger LOGGER = LogUtils.getLogger();
-+    static final String GLOBAL_CONFIGURATION_FILE_NAME= "magellan-global.yml";
-+    static final String LEVEL_DEFAULT_CONFIGURATION_FILE_NAME = "magellan-level-dafaults.yml";
-+    static final String LEVEL_CONFIGURATION_FILE_NAME = "magellan-configuration.yml";
++    static final String GLOBAL_CONFIGURATION_FILE_NAME= "andromedaplus-global.yml";
++    static final String LEVEL_DEFAULT_CONFIGURATION_FILE_NAME = "andromedaplus-level-dafaults.yml";
++    static final String LEVEL_CONFIGURATION_FILE_NAME = "andromedaplus-configuration.yml";
 +
 +    private static final String HEADER_START = """
 +            # English
-+            This is the %s configuration file for Magellan.
++            This is the %s configuration file for AndromedaPlus.
 +            As you can see, there's a lot to configure. Some options may impact gameplay,
 +            so use with caution, and make sure you know what each option does before configuring.
 +            
-+            If you need help with the configuration or have any questions related to Magellan,
-+            join us in our Discord for Magellan, or check the GitHub Wiki pages.
++            If you need help with the configuration or have any questions related to AndromedaPlus,
++            join us in our Discord for AndromedaPlus, or check the GitHub Wiki pages.
 +            
 +            %s
 +            
 +            # 한국어
-+            본 파일은 Magellan의 %s 구성 파일입니다.
++            본 파일은 AndromedaPlus의 %s 구성 파일입니다.
 +            보시다시피, 굉장히 많은 설정이 있습니다. 몇몇 설정은 게임플레이에 영향을 줄 수 있으므로,
 +            주의해서 사용하시기 바라며, 각 설정이 어떠한 역할을 하는지 알고 사용하시기 바랍니다.
 +            
-+            만약 구성에 관한 도움이 필요하거나 Magellan에 관련한 질문이 있으시다면,
++            만약 구성에 관한 도움이 필요하거나 AndromedaPlus에 관련한 질문이 있으시다면,
 +            Discord 또는 네이버 카페에 가입하거나, GitHub 위키 페이지를 참고하시기 바랍니다.
 +            
 +            %s
 +            
-+            Wiki: https://github.com/TeamEarendel/Magellan/wiki
++            Wiki: https://github.com/TeamEarendel/AndromedaPlus/wiki
 +            Discord: *COMMING SOON*
 +            Twitter: *COMMING SOON*
 +            Naver Cafe: *COMMING SOON*
@@ -595,24 +537,24 @@ index 0000000000000000000000000000000000000000..b4a507315b2e3fbb308e5ad575b065fb
 +
 +    private static final Function<Configurations.ContextMap, String> LEVEL_SPECIFIC_HEADER = map -> String.format("""
 +            # English
-+            This is a level specific configuration file for Magellan.
++            This is a level specific configuration file for AndromedaPlus.
 +            This file may start empty, but can be filled with settings to override ones in the %s/%s
 +            
-+            If you need help with the configuration or have any questions related to Magellan,
-+            join us in our Discord for Magellan, or check the GitHub Wiki pages.
++            If you need help with the configuration or have any questions related to AndromedaPlus,
++            join us in our Discord for AndromedaPlus, or check the GitHub Wiki pages.
 +            
 +            
 +            # 한국어
-+            본 파일은 Magellan의 레벨별 구성 파일입니다.
++            본 파일은 AndromedaPlus의 레벨별 구성 파일입니다.
 +            이 파일은 비어있을 수 있지만, %s/%s 파일의 설정을 덮어쓰기 위해 설정을 채울 수 있습니다.
 +            
-+            만약 구성에 관한 도움이 필요하거나 Magellan에 관련한 질문이 있으시다면,
++            만약 구성에 관한 도움이 필요하거나 AndromedaPlus에 관련한 질문이 있으시다면,
 +            Discord 또는 네이버 카페에 가입하거나, GitHub 위키 페이지를 참고하시기 바랍니다.
 +            
 +            
 +            Level: %s (%s)
 +            
-+            Wiki: https://github.com/TeamEarendel/Magellan/wiki
++            Wiki: https://github.com/TeamEarendel/AndromedaPlus/wiki
 +            Discord: *COMMING SOON*
 +            Twitter: *COMMING SOON*
 +            Naver Cafe: *COMMING SOON*
@@ -655,12 +597,12 @@ index 0000000000000000000000000000000000000000..b4a507315b2e3fbb308e5ad575b065fb
 +            자세한 내용은 GitHub 위키를 참고하시기 바랍니다.
 +            
 +            
-+            Wiki: https://github.com/TeamEarendel/Magellan/wiki
++            Wiki: https://github.com/TeamEarendel/AndromedaPlus/wiki
 +            """;
 +
 +    private static final List<Transformations.DefaultsAware> DEFAULTS_AWARE_TRANSFORMATIONS = Collections.emptyList();
 +
-+    public MagellanConfigurations(final Path globalFolder) {
++    public AndromedaPlusConfigurations(final Path globalFolder) {
 +        super(globalFolder, GlobalConfiguration.class, LevelConfigurations.class, GLOBAL_CONFIGURATION_FILE_NAME, LEVEL_DEFAULT_CONFIGURATION_FILE_NAME, LEVEL_CONFIGURATION_FILE_NAME);
 +    }
 +
@@ -675,7 +617,7 @@ index 0000000000000000000000000000000000000000..b4a507315b2e3fbb308e5ad575b065fb
 +
 +    @Override
 +    protected YamlConfigurationLoader.Builder createLoaderBuilder() {
-+        return super.createLoaderBuilder().defaultOptions(MagellanConfigurations::defaultOptions);
++        return super.createLoaderBuilder().defaultOptions(AndromedaPlusConfigurations::defaultOptions);
 +    }
 +
 +    // Create Global Object Mapper Factory Builder
@@ -695,7 +637,7 @@ index 0000000000000000000000000000000000000000..b4a507315b2e3fbb308e5ad575b065fb
 +
 +    @Override
 +    protected YamlConfigurationLoader.Builder createGlobalLoaderBuilder() {
-+        return super.createGlobalLoaderBuilder().defaultOptions(MagellanConfigurations::defaultGlobalOptions);
++        return super.createGlobalLoaderBuilder().defaultOptions(AndromedaPlusConfigurations::defaultGlobalOptions);
 +    }
 +
 +    // Initialize
@@ -716,7 +658,7 @@ index 0000000000000000000000000000000000000000..b4a507315b2e3fbb308e5ad575b065fb
 +        return super.createWorldObjectMapperFactoryBuilder(contextMap)
 +                .addNodeResolver(new RequiresSpigotInitialization.Factory(contextMap.require(PaperConfigurations.SPIGOT_WORLD_CONFIG_CONTEXT_KEY).get()))
 +                .addNodeResolver(new NestedSetting.Factory())
-+                .addDiscoverer(InnerClassFieldDiscoverer.magellanLevelConfiguration(contextMap));
++                .addDiscoverer(InnerClassFieldDiscoverer.andromedaplusLevelConfiguration(contextMap));
 +    }
 +
 +    @Override
@@ -764,7 +706,7 @@ index 0000000000000000000000000000000000000000..b4a507315b2e3fbb308e5ad575b065fb
 +        final String world = contextMap.require(WORLD_NAME);
 +
 +        if (version.virtual()) {
-+            LOGGER.warn("The Magellan level configuration file for {} didn't have a version field, assuming latest", world);
++            LOGGER.warn("The AndromedaPlus level configuration file for {} didn't have a version field, assuming latest", world);
 +            version.raw(LevelConfigurations.CURRENT_VERSION);
 +        }
 +
@@ -791,7 +733,7 @@ index 0000000000000000000000000000000000000000..b4a507315b2e3fbb308e5ad575b065fb
 +        try {
 +            return super.createWorldConfig(contextMap);
 +        } catch (IOException exception) {
-+            throw new RuntimeException(String.format("Could not create Magellan level configuration for %s", levelName), exception);
++            throw new RuntimeException(String.format("Could not create AndromedaPlus level configuration for %s", levelName), exception);
 +        }
 +    }
 +
@@ -813,7 +755,7 @@ index 0000000000000000000000000000000000000000..b4a507315b2e3fbb308e5ad575b065fb
 +        return BasicConfigurationNode.root(options);
 +    }
 +
-+    public static MagellanConfigurations setup(final Path legacyConfigurations, final Path configurationDir) throws Exception {
++    public static AndromedaPlusConfigurations setup(final Path legacyConfigurations, final Path configurationDir) throws Exception {
 +        final Path legacy = Files.isSymbolicLink(legacyConfigurations) ? Files.readSymbolicLink(legacyConfigurations) : legacyConfigurations;
 +        final Path replacementFile = legacy.resolveSibling(legacyConfigurations.getFileName() + "-README.txt");
 +
@@ -825,9 +767,9 @@ index 0000000000000000000000000000000000000000..b4a507315b2e3fbb308e5ad575b065fb
 +
 +        try {
 +            PaperConfigurations.createDirectoriesSymlinkAware(configurationDir);
-+            return new MagellanConfigurations(configurationDir);
++            return new AndromedaPlusConfigurations(configurationDir);
 +        } catch (final IOException e) {
-+            throw new RuntimeException("Could not setup Magellan configuration files", e);
++            throw new RuntimeException("Could not setup AndromedaPlus configuration files", e);
 +        }
 +    }
 +
@@ -836,19 +778,77 @@ index 0000000000000000000000000000000000000000..b4a507315b2e3fbb308e5ad575b065fb
 +            this.initializeGlobalConfiguration(reloader(this.globalConfigClass, GlobalConfiguration.get()));
 +            this.initializeWorldDefaultsConfiguration();
 +            for (ServerLevel level : server.getAllLevels())
-+                this.createWorldConfig(PaperConfigurations.createWorldContextMap(level), reloader(this.worldConfigClass, level.magellanLevelConfiguration()));
++                this.createWorldConfig(PaperConfigurations.createWorldContextMap(level), reloader(this.worldConfigClass, level.andromedaplusLevelConfiguration()));
 +        } catch (Exception e) {
-+            throw new RuntimeException("Could not reload Magellan configuration files", e);
++            throw new RuntimeException("Could not reload AndromedaPlus configuration files", e);
 +        }
 +    }
 +}
-diff --git a/src/main/java/team/earendel/magellan/configurations/RemovedConfigurations.java b/src/main/java/team/earendel/magellan/configurations/RemovedConfigurations.java
+diff --git a/src/main/java/team/earendel/andromedaplus/configurations/GlobalConfiguration.java b/src/main/java/team/earendel/andromedaplus/configurations/GlobalConfiguration.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..656ffd46f191432fd9cc5a0702254d28bcfa15cc
+index 0000000000000000000000000000000000000000..a4f208a8cbe62b01bd4d69eeef2b3094fa6cb3cd
 --- /dev/null
-+++ b/src/main/java/team/earendel/magellan/configurations/RemovedConfigurations.java
++++ b/src/main/java/team/earendel/andromedaplus/configurations/GlobalConfiguration.java
+@@ -0,0 +1,22 @@
++package team.earendel.andromedaplus.configurations;
++
++import io.papermc.paper.configuration.Configuration;
++import io.papermc.paper.configuration.ConfigurationPart;
++import org.spongepowered.configurate.objectmapping.meta.Setting;
++
++@SuppressWarnings({"CanBeFinal", "FieldCanBeLocal", "FieldMayBeFinal", "NotNullFieldNotInitialized", "InnerClassMayBeStatic"})
++public class GlobalConfiguration extends ConfigurationPart {
++    static final int CURRENT_VERSION = 1;
++    private static GlobalConfiguration instance;
++
++    public static GlobalConfiguration get() {
++        return instance;
++    }
++
++    static void set(GlobalConfiguration instance) {
++        GlobalConfiguration.instance = instance;
++    }
++
++    @Setting(Configuration.VERSION_FIELD)
++    public int version = CURRENT_VERSION;
++}
+diff --git a/src/main/java/team/earendel/andromedaplus/configurations/LevelConfigurations.java b/src/main/java/team/earendel/andromedaplus/configurations/LevelConfigurations.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..d7ffcdfe31eaee9e1b5155babe468584ad368bfa
+--- /dev/null
++++ b/src/main/java/team/earendel/andromedaplus/configurations/LevelConfigurations.java
+@@ -0,0 +1,24 @@
++package team.earendel.andromedaplus.configurations;
++
++import io.papermc.paper.configuration.Configuration;
++import io.papermc.paper.configuration.ConfigurationPart;
++import io.papermc.paper.configuration.PaperConfigurations;
++import net.minecraft.resources.ResourceLocation;
++import org.spongepowered.configurate.objectmapping.meta.Setting;
++
++@SuppressWarnings({"FieldCanBeLocal", "FieldMayBeFinal", "NotNullFieldNotInitialized", "InnerClassMayBeStatic"})
++public class LevelConfigurations extends ConfigurationPart {
++    public static final int CURRENT_VERSION = 1;
++
++    private transient final ResourceLocation worldKey;
++    public LevelConfigurations(ResourceLocation worldKey) {
++        this.worldKey = worldKey;
++    }
++
++    public boolean isDefault() {
++        return this.worldKey.equals(PaperConfigurations.WORLD_DEFAULTS_KEY);
++    }
++
++    @Setting(Configuration.VERSION_FIELD)
++    public int version = CURRENT_VERSION;
++}
+diff --git a/src/main/java/team/earendel/andromedaplus/configurations/RemovedConfigurations.java b/src/main/java/team/earendel/andromedaplus/configurations/RemovedConfigurations.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..803a8d57d1e21386c4d57952792069b675ad28d3
+--- /dev/null
++++ b/src/main/java/team/earendel/andromedaplus/configurations/RemovedConfigurations.java
 @@ -0,0 +1,10 @@
-+package team.earendel.magellan.configurations;
++package team.earendel.andromedaplus.configurations;
 +
 +import org.spongepowered.configurate.NodePath;
 +

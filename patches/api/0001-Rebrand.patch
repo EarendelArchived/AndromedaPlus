@@ -5,7 +5,7 @@ Subject: [PATCH] Rebrand
 
 
 diff --git a/build.gradle.kts b/build.gradle.kts
-index 73cf94c26512ac622948e8ec5422beed3ac30bae..a32b0fb4b0d4a24bd3ff8c95ff1ff75d7f293189 100644
+index 73cf94c26512ac622948e8ec5422beed3ac30bae..4d7218223f5d897760a437ff9e0c8dc8fff96258 100644
 --- a/build.gradle.kts
 +++ b/build.gradle.kts
 @@ -159,7 +159,7 @@ publishing {
@@ -13,7 +13,7 @@ index 73cf94c26512ac622948e8ec5422beed3ac30bae..a32b0fb4b0d4a24bd3ff8c95ff1ff75d
          maven {
              name = "githubPackage"
 -            url = uri("https://maven.pkg.github.com/TeamEarendel/Andromeda")
-+            url = uri("https://maven.pkg.github.com/TeamEarendel/Magellan") // Magellan
++            url = uri("https://maven.pkg.github.com/TeamEarendel/AndromedaPlus") // AndromedaPlus
  
              credentials.username = System.getenv("GITHUB_USERNAME")
              credentials.password = System.getenv("GITHUB_TOKEN")
