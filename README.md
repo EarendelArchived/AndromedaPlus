@@ -1,0 +1,1 @@
+Purpur Fork Template based on [Andromeda](https://github.com/TeamEarendel/Andromeda)

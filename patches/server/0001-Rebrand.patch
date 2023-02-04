@@ -1,0 +1,342 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: AlphaKR93 <alphakr93@gmail.com>
+Date: Thu, 19 Jan 2023 17:28:05 +0900
+Subject: [PATCH] Rebrand
+
+
+diff --git a/build.gradle.kts b/build.gradle.kts
+index 8bcd87d672467629ef092c790cc448b6eb9f4ad9..80095bd1aa3aed3168035594502f41465dd409c4 100644
+--- a/build.gradle.kts
++++ b/build.gradle.kts
+@@ -7,7 +7,7 @@ plugins {
+ }
+ 
+ dependencies {
+-    implementation(project(":andromeda-api")) // Pufferfish // Purpur // Andromeda
++    implementation(project(":magellan-api")) // Pufferfish // Purpur // Andromeda // Magellan
+     // Pufferfish start
+     implementation("io.papermc.paper:paper-mojangapi:1.19.3-R0.1-SNAPSHOT") {
+         exclude("io.papermc.paper", "paper-api")
+@@ -83,7 +83,7 @@ tasks.jar {
+         attributes(
+             "Main-Class" to "org.bukkit.craftbukkit.Main",
+             "Implementation-Title" to "CraftBukkit",
+-            "Implementation-Version" to "git-Andromeda-$implementationVersion", // Pufferfish // Purpur // Andromeda
++            "Implementation-Version" to "git-Magellan-$implementationVersion", // Pufferfish // Purpur // Andromeda // Magellan
+             "Implementation-Vendor" to date, // Paper
+             "Specification-Title" to "Bukkit",
+             "Specification-Version" to project.version,
+diff --git a/src/main/java/com/destroystokyo/paper/Metrics.java b/src/main/java/com/destroystokyo/paper/Metrics.java
+index f620c51723a5149ba641a6da743648cf4951cc85..57407352871b50f21045d6b043b3115c0f7b7610 100644
+--- a/src/main/java/com/destroystokyo/paper/Metrics.java
++++ b/src/main/java/com/destroystokyo/paper/Metrics.java
+@@ -593,7 +593,7 @@ public class Metrics {
+             boolean logFailedRequests = config.getBoolean("logFailedRequests", false);
+             // Only start Metrics, if it's enabled in the config
+             if (config.getBoolean("enabled", true)) {
+-                Metrics metrics = new Metrics("Andromeda", serverUUID, logFailedRequests, Bukkit.getLogger()); // Purpur // Andromeda
++                Metrics metrics = new Metrics("Magellan", serverUUID, logFailedRequests, Bukkit.getLogger()); // Purpur // Andromeda // Magellan
+ 
+                 metrics.addCustomChart(new Metrics.SimplePie("minecraft_version", () -> {
+                     String minecraftVersion = Bukkit.getVersion();
+@@ -603,7 +603,7 @@ public class Metrics {
+ 
+                 metrics.addCustomChart(new Metrics.SingleLineChart("players", () -> Bukkit.getOnlinePlayers().size()));
+                 metrics.addCustomChart(new Metrics.SimplePie("online_mode", () -> Bukkit.getOnlineMode() ? "online" : (io.papermc.paper.configuration.GlobalConfiguration.get().proxies.isProxyOnlineMode() ? "bungee" : "offline"))); // Purpur
+-                metrics.addCustomChart(new Metrics.SimplePie("andromeda_version", () -> (org.bukkit.craftbukkit.Main.class.getPackage().getImplementationVersion() != null) ? org.bukkit.craftbukkit.Main.class.getPackage().getImplementationVersion() : "unknown")); // Purpur // Andromeda
++                metrics.addCustomChart(new Metrics.SimplePie("magellan_version", () -> (org.bukkit.craftbukkit.Main.class.getPackage().getImplementationVersion() != null) ? org.bukkit.craftbukkit.Main.class.getPackage().getImplementationVersion() : "unknown")); // Purpur // Andromeda // Magellan
+ 
+                 metrics.addCustomChart(new Metrics.DrilldownPie("java_version", () -> {
+                     Map<String, Map<String, Integer>> map = new HashMap<>();
+diff --git a/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java b/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
+index abd9b2bb9b2079b1eef20e3b1ab1c5c24cc91e65..27f14330c949e81bb3cd9952373c42d2930eee90 100644
+--- a/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
++++ b/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
+@@ -20,7 +20,7 @@ import java.util.stream.StreamSupport;
+ public class PaperVersionFetcher implements VersionFetcher {
+     private static final java.util.regex.Pattern VER_PATTERN = java.util.regex.Pattern.compile("^([0-9\\.]*)\\-.*R"); // R is an anchor, will always give '-R' at end
+     // Purpur start
+-    private static final String DOWNLOAD_PAGE = "https://github.com/TeamEarendel/Andromeda/releases"; // Andromeda
++    private static final String DOWNLOAD_PAGE = "https://github.com/TeamEarendel/Magellan/releases"; // Andromeda // Magellan
+     private static int distance = -2; public int distance() { return distance; }
+     // Purpur end
+     private static @Nullable String mcVer;
+@@ -33,8 +33,8 @@ public class PaperVersionFetcher implements VersionFetcher {
+     @Nonnull
+     @Override
+     public Component getVersionMessage(@Nonnull String serverVersion) {
+-        String[] parts = serverVersion.substring("git-Andromeda-".length()).split("[-\\s]"); // Purpur // Andromeda
+-        final Component updateMessage = getUpdateStatusMessage("TeamEarendel/Andromeda", "ver/" + getMinecraftVersion(), parts[0]); // Purpur // Andromeda
++        String[] parts = serverVersion.substring("git-Magellan-".length()).split("[-\\s]"); // Purpur // Andromeda // Magellan
++        final Component updateMessage = getUpdateStatusMessage("TeamEarendel/Magellan", "ver/" + getMinecraftVersion(), parts[0]); // Purpur // Andromeda // Magellan
+         final Component history = getHistory();
+ 
+         return history != null ? Component.join(net.kyori.adventure.text.JoinConfiguration.separator(Component.newline()), history, updateMessage) : updateMessage; // Purpur
+@@ -47,7 +47,7 @@ public class PaperVersionFetcher implements VersionFetcher {
+                 String result = matcher.group();
+                 mcVer = result.substring(0, result.length() - 2); // strip 'R' anchor and trailing '-'
+             } else {
+-                org.bukkit.Bukkit.getLogger().warning("Unable to match version to pattern! Report to Andromeda!"); // Purpur // Andromeda
++                org.bukkit.Bukkit.getLogger().warning("Unable to match version to pattern! Report to Magellan!"); // Purpur // Andromeda // Magellan
+                 org.bukkit.Bukkit.getLogger().warning("Pattern: " + VER_PATTERN.toString());
+                 org.bukkit.Bukkit.getLogger().warning("Version: " + org.bukkit.Bukkit.getBukkitVersion());
+             }
+diff --git a/src/main/java/com/destroystokyo/paper/console/PaperConsole.java b/src/main/java/com/destroystokyo/paper/console/PaperConsole.java
+index 76eb52435d80a71e8247ecdb8301a64d7078464e..cae3754624c768c343037c622bfc4c194d03c75f 100644
+--- a/src/main/java/com/destroystokyo/paper/console/PaperConsole.java
++++ b/src/main/java/com/destroystokyo/paper/console/PaperConsole.java
+@@ -17,7 +17,7 @@ public final class PaperConsole extends SimpleTerminalConsole {
+     @Override
+     protected LineReader buildReader(LineReaderBuilder builder) {
+         builder
+-                .appName("Andromeda") // Purpur // Andromeda
++                .appName("Magellan") // Purpur // Andromeda // Magellan
+                 .variable(LineReader.HISTORY_FILE, java.nio.file.Paths.get(".console_history"))
+                 .completer(new ConsoleCommandCompleter(this.server))
+                 .option(LineReader.Option.COMPLETE_IN_WORD, true);
+diff --git a/src/main/java/net/minecraft/CrashReport.java b/src/main/java/net/minecraft/CrashReport.java
+index 1d73521c798ef5d0a462aec401b7cc6d3e10d9ff..96c9077e3bdd4c3c0a3f0adf2ed1181d4905806f 100644
+--- a/src/main/java/net/minecraft/CrashReport.java
++++ b/src/main/java/net/minecraft/CrashReport.java
+@@ -35,7 +35,7 @@ public class CrashReport {
+         io.papermc.paper.util.StacktraceDeobfuscator.INSTANCE.deobfuscateThrowable(cause); // Paper
+         this.title = message;
+         this.exception = cause;
+-        this.systemReport.setDetail("Andromeda Information", new org.bukkit.craftbukkit.CraftCrashReport()); // CraftBukkit // Andromeda
++        this.systemReport.setDetail("Magellan Information", new org.bukkit.craftbukkit.CraftCrashReport()); // CraftBukkit // Andromeda // Magellan
+     }
+ 
+     public String getTitle() {
+@@ -125,7 +125,7 @@ public class CrashReport {
+         stringbuilder.append("---- Minecraft Crash Report ----\n");
+         // Purpur start
+         stringbuilder.append("// ");
+-        stringbuilder.append("// DO NOT REPORT THIS TO PAPER! REPORT TO ANDROMEDA INSTEAD!"); // Andromeda
++        stringbuilder.append("// DO NOT REPORT THIS TO PAPER! REPORT TO MAGELLAN INSTEAD!"); // Andromeda // Magellan
+         // Purpur end
+         stringbuilder.append("// ");
+         stringbuilder.append(CrashReport.getErrorComment());
+diff --git a/src/main/java/net/minecraft/server/Main.java b/src/main/java/net/minecraft/server/Main.java
+index c5175ba257b51170a5cff984ccb65df73443e1df..31faf2d6492696f7d0c99a48edbc0d6f15db1209 100644
+--- a/src/main/java/net/minecraft/server/Main.java
++++ b/src/main/java/net/minecraft/server/Main.java
+@@ -76,20 +76,6 @@ public class Main {
+ 
+     @DontObfuscate
+     public static void main(final OptionSet optionset) { // CraftBukkit - replaces main(String[] astring)
+-        // Andromeda start - Branding
+-        LOGGER.warn("ANDROMEDA IS VERY UNSTABLE, SO DO NOT USE IT IN PRODUCTION SERVER!");
+-        System.out.println("""
+-                
+-                  /$$$$$$  /$$   /$$ /$$$$$$$  /$$$$$$$   /$$$$$$  /$$      /$$ /$$$$$$$$ /$$$$$$$   /$$$$$$\s
+-                 /$$__  $$| $$$ | $$| $$__  $$| $$__  $$ /$$__  $$| $$$    /$$$| $$_____/| $$__  $$ /$$__  $$
+-                | $$  \\ $$| $$$$| $$| $$  \\ $$| $$  \\ $$| $$  \\ $$| $$$$  /$$$$| $$      | $$  \\ $$| $$  \\ $$
+-                | $$$$$$$$| $$ $$ $$| $$  | $$| $$$$$$$/| $$  | $$| $$ $$/$$ $$| $$$$$   | $$  | $$| $$$$$$$$
+-                | $$__  $$| $$  $$$$| $$  | $$| $$__  $$| $$  | $$| $$  $$$| $$| $$__/   | $$  | $$| $$__  $$
+-                | $$  | $$| $$\\  $$$| $$  | $$| $$  \\ $$| $$  | $$| $$\\  $ | $$| $$      | $$  | $$| $$  | $$
+-                | $$  | $$| $$ \\  $$| $$$$$$$/| $$  | $$|  $$$$$$/| $$ \\/  | $$| $$$$$$$$| $$$$$$$/| $$  | $$
+-                |__/  |__/|__/  \\__/|_______/ |__/  |__/ \\______/ |__/     |__/|________/|_______/ |__/  |__/
+-                """);
+-        // Andromeda end
+         SharedConstants.tryDetectVersion();
+         /* CraftBukkit start - Replace everything
+         OptionParser optionparser = new OptionParser();
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index 90b031b4046f125d6e3fe2215686ff788d33965c..45a24d0f6bb4aedf40976a51a78286da51866d54 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -930,7 +930,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+         shutdownThread = Thread.currentThread();
+         org.spigotmc.WatchdogThread.doStop(); // Paper
+         if (!isSameThread()) {
+-            MinecraftServer.LOGGER.info("Stopping main thread (Ignore any thread death message you see! - DO NOT REPORT THREAD DEATH TO ANDROMEDA)"); // Purpur // Andromeda
++            MinecraftServer.LOGGER.info("Stopping main thread (Ignore any thread death message you see! - DO NOT REPORT THREAD DEATH TO MAGELLAN)"); // Purpur // Andromeda
+             while (this.getRunningThread().isAlive()) {
+                 this.getRunningThread().stop();
+                 try {
+diff --git a/src/main/java/net/minecraft/server/gui/MinecraftServerGui.java b/src/main/java/net/minecraft/server/gui/MinecraftServerGui.java
+index 3a98106f8b26a55d17681f94e365f1340b1d3449..accfed7191dbfe66b29d52ab9852ad4525ddaad1 100644
+--- a/src/main/java/net/minecraft/server/gui/MinecraftServerGui.java
++++ b/src/main/java/net/minecraft/server/gui/MinecraftServerGui.java
+@@ -51,7 +51,7 @@ public class MinecraftServerGui extends JComponent {
+             ;
+         }
+ 
+-        final JFrame jframe = new JFrame("Andromeda"); // Andromeda
++        final JFrame jframe = new JFrame("Magellan"); // Andromeda // Magellan
+         final MinecraftServerGui servergui = new MinecraftServerGui(server);
+ 
+         jframe.setDefaultCloseOperation(2);
+@@ -59,7 +59,7 @@ public class MinecraftServerGui extends JComponent {
+         jframe.pack();
+         jframe.setLocationRelativeTo((Component) null);
+         jframe.setVisible(true);
+-        jframe.setName("Andromeda"); // Paper // Andromeda
++        jframe.setName("Magellan"); // Paper // Andromeda // Magellan
+ 
+         // Paper start - Add logo as frame image
+         try {
+@@ -71,7 +71,7 @@ public class MinecraftServerGui extends JComponent {
+         jframe.addWindowListener(new WindowAdapter() {
+             public void windowClosing(WindowEvent windowevent) {
+                 if (!servergui.isClosing.getAndSet(true)) {
+-                    jframe.setTitle("Andromeda - shutting down"); // Andromeda
++                    jframe.setTitle("Magellan - shutting down"); // Andromeda // Magellan
+                     server.halt(true);
+                     servergui.runFinalizers();
+                 }
+diff --git a/src/main/java/net/minecraft/world/level/Level.java b/src/main/java/net/minecraft/world/level/Level.java
+index 7eac2897643f6af4032e3a4d15a7d7e62ce5aa44..65cf213c6bf41f6a29c508ebcf3b13f9fe26df37 100644
+--- a/src/main/java/net/minecraft/world/level/Level.java
++++ b/src/main/java/net/minecraft/world/level/Level.java
+@@ -1048,7 +1048,7 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
+             TickingBlockEntity tickingblockentity = (TickingBlockEntity) this.blockEntityTickers.get(tileTickPosition);
+             // Spigot start
+             if (tickingblockentity == null) {
+-                this.getCraftServer().getLogger().severe("Andromeda has detected a null entity and has removed it, preventing a crash"); // Andromeda
++                this.getCraftServer().getLogger().severe("Magellan has detected a null entity and has removed it, preventing a crash"); // Andromeda // Magellan
+                 tilesThisCycle--;
+                 continue;
+             }
+diff --git a/src/main/java/net/minecraft/world/level/chunk/storage/RegionFileStorage.java b/src/main/java/net/minecraft/world/level/chunk/storage/RegionFileStorage.java
+index b009b06dd6390def2ef58a6a9c2e3d029ad4293d..463caa97bdb6755cb42f581adebab9f1722cac9f 100644
+--- a/src/main/java/net/minecraft/world/level/chunk/storage/RegionFileStorage.java
++++ b/src/main/java/net/minecraft/world/level/chunk/storage/RegionFileStorage.java
+@@ -113,7 +113,7 @@ public class RegionFileStorage implements AutoCloseable {
+ 
+     // Paper start
+     private static void printOversizedLog(String msg, Path file, int x, int z) {
+-        org.apache.logging.log4j.LogManager.getLogger().fatal(msg + " (" + file.toString().replaceAll(".+[\\\\/]", "") + " - " + x + "," + z + ") Go clean it up to remove this message. /minecraft:tp " + (x<<4)+" 128 "+(z<<4) + " - DO NOT REPORT THIS TO ANDROMEDA - You may ask for help on Discord, but do not file an issue. These error messages can not be removed."); // Andromeda
++        org.apache.logging.log4j.LogManager.getLogger().fatal(msg + " (" + file.toString().replaceAll(".+[\\\\/]", "") + " - " + x + "," + z + ") Go clean it up to remove this message. /minecraft:tp " + (x<<4)+" 128 "+(z<<4) + " - DO NOT REPORT THIS TO MAGELLAN - You may ask for help on Discord, but do not file an issue. These error messages can not be removed."); // Andromeda
+     }
+ 
+     private static final int DEFAULT_SIZE_THRESHOLD = 1024 * 8;
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+index 6be5f2aef4bbcf6554bcce63197c0800f4a45fe0..b4c6055b87a0fa50264bab5eb12fb28fb5982316 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+@@ -262,7 +262,7 @@ import javax.annotation.Nullable; // Paper
+ import javax.annotation.Nonnull; // Paper
+ 
+ public final class CraftServer implements Server {
+-    private final String serverName = "Andromeda"; // Paper // Purpur // Andromeda
++    private final String serverName = "Magellan"; // Paper // Purpur // Andromeda // Magellan
+     private final String serverVersion;
+     private final String bukkitVersion = Versioning.getBukkitVersion();
+     private final Logger logger = Logger.getLogger("Minecraft");
+diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftLivingEntity.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftLivingEntity.java
+index ce15e4c479683665e1374523c3e053683b7ab79b..803e07f28396818930e14c46f8869ba9c9986eca 100644
+--- a/src/main/java/org/bukkit/craftbukkit/entity/CraftLivingEntity.java
++++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftLivingEntity.java
+@@ -877,7 +877,7 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
+             return EntityCategory.WATER;
+         }
+ 
+-        throw new UnsupportedOperationException("Unsupported monster type: " + type + ". This is a bug, report this to Andromeda."); // Purpur // Andromeda
++        throw new UnsupportedOperationException("Unsupported monster type: " + type + ". This is a bug, report this to Magellan."); // Purpur // Andromeda // Magellan
+     }
+ 
+     @Override
+diff --git a/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java b/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java
+index cd08c91adc2b388377ff9a47f1708e2cd86f38e7..2fc7819bc03fad0a6d7ef7c0ce298c0d49421b79 100644
+--- a/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java
++++ b/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java
+@@ -504,7 +504,7 @@ public class CraftScheduler implements BukkitScheduler {
+                 this.parsePending();
+             } else {
+                 //this.debugTail = this.debugTail.setNext(new CraftAsyncDebugger(currentTick + CraftScheduler.RECENT_TICKS, task.getOwner(), task.getTaskClass())); // Paper
+-                task.getOwner().getLogger().log(Level.SEVERE, "Unexpected Async Task in the Sync Scheduler. Report this to Andromeda"); // Paper // Purpur // Andromeda
++                task.getOwner().getLogger().log(Level.SEVERE, "Unexpected Async Task in the Sync Scheduler. Report this to Magellan"); // Paper // Purpur // Andromeda // Magellan
+                 // We don't need to parse pending
+                 // (async tasks must live with race-conditions if they attempt to cancel between these few lines of code)
+             }
+diff --git a/src/main/java/org/bukkit/craftbukkit/util/Versioning.java b/src/main/java/org/bukkit/craftbukkit/util/Versioning.java
+index e17371bbef3404536c4fdc2e7e27c65079a3a940..9553ffdf9687785e3dd69f7f4996a0450f29d67b 100644
+--- a/src/main/java/org/bukkit/craftbukkit/util/Versioning.java
++++ b/src/main/java/org/bukkit/craftbukkit/util/Versioning.java
+@@ -11,7 +11,7 @@ public final class Versioning {
+     // Andromeda start - Cache Version
+     public static String version = "Unknown-Version";
+     static {
+-        InputStream stream = Bukkit.class.getClassLoader().getResourceAsStream("META-INF/maven/team.earendel.andromeda/andromeda-api/pom.properties"); // Purpur // Andromeda
++        InputStream stream = Bukkit.class.getClassLoader().getResourceAsStream("META-INF/maven/team.earendel.magellan/magellan-api/pom.properties"); // Purpur // Andromeda
+         Properties properties = new Properties();
+ 
+         if (stream != null) {
+@@ -20,7 +20,7 @@ public final class Versioning {
+ 
+                 version = properties.getProperty("version");
+             } catch (IOException ex) {
+-                Logger.getLogger(Versioning.class.getName()).log(Level.SEVERE, "Could not get Andromeda version!", ex); // Andromeda
++                Logger.getLogger(Versioning.class.getName()).log(Level.SEVERE, "Could not get Magellan version!", ex); // Andromeda // Magellan
+             }
+         }
+     }
+diff --git a/src/main/java/org/purpurmc/purpur/PurpurConfig.java b/src/main/java/org/purpurmc/purpur/PurpurConfig.java
+index 1cf23b9d3bb8e5eca4656972d40409a7e81b9051..7557cf1e0c2ec03c9d3da3299069466c25ccfa22 100644
+--- a/src/main/java/org/purpurmc/purpur/PurpurConfig.java
++++ b/src/main/java/org/purpurmc/purpur/PurpurConfig.java
+@@ -231,7 +231,7 @@ public class PurpurConfig {
+         deathMessageOnlyBroadcastToAffectedPlayer = getBoolean("settings.broadcasts.death.only-broadcast-to-affected-player", deathMessageOnlyBroadcastToAffectedPlayer);
+     }
+ 
+-    public static String serverModName = "Andromeda"; // Andromeda
++    public static String serverModName = "Magellan"; // Andromeda // Magellan
+     private static void serverModName() {
+         serverModName = getString("settings.server-mod-name", serverModName);
+     }
+diff --git a/src/main/java/org/spigotmc/WatchdogThread.java b/src/main/java/org/spigotmc/WatchdogThread.java
+index db77c2a0bb2321eeb75cff563491364c3d54021d..72c41b09ddd94a9337886ef7e816fd2c9cf5eb80 100644
+--- a/src/main/java/org/spigotmc/WatchdogThread.java
++++ b/src/main/java/org/spigotmc/WatchdogThread.java
+@@ -96,7 +96,7 @@ public final class WatchdogThread extends io.papermc.paper.util.TickThread // Pa
+ 
+     private WatchdogThread(long timeoutTime, boolean restart)
+     {
+-        super( "Andromeda Watchdog Thread" ); // Purpur - use a generic name // Andromeda
++        super( "Magellan Watchdog Thread" ); // Purpur - use a generic name // Andromeda // Magellan
+         this.timeoutTime = timeoutTime;
+         this.restart = restart;
+         earlyWarningEvery = Math.min(io.papermc.paper.configuration.GlobalConfiguration.get().watchdog.earlyWarningEvery, timeoutTime); // Paper
+@@ -155,14 +155,14 @@ public final class WatchdogThread extends io.papermc.paper.util.TickThread // Pa
+                 if (isLongTimeout) {
+                 // Paper end
+                 log.log( Level.SEVERE, "------------------------------" );
+-                log.log( Level.SEVERE, "The server has stopped responding! This is (probably) not a Andromeda bug." ); // Paper // Purpur // Andromeda
++                log.log( Level.SEVERE, "The server has stopped responding! This is (probably) not a Magellan bug." ); // Paper // Purpur // Andromeda // Magellan
+                 log.log( Level.SEVERE, "If you see a plugin in the Server thread dump below, then please report it to that author" );
+                 log.log( Level.SEVERE, "\t *Especially* if it looks like HTTP or MySQL operations are occurring" );
+                 log.log( Level.SEVERE, "If you see a world save or edit, then it means you did far more than your server can handle at once" );
+                 log.log( Level.SEVERE, "\t If this is the case, consider increasing timeout-time in spigot.yml but note that this will replace the crash with LARGE lag spikes" );
+-                log.log( Level.SEVERE, "If you are unsure or still think this is a Andromeda bug, please report this to https://github.com/TeamEarendel/Andromeda/issues" ); // Purpur // Andromeda
++                log.log( Level.SEVERE, "If you are unsure or still think this is a Magellan bug, please report this to https://github.com/TeamEarendel/Magellan/issues" ); // Purpur // Andromeda // Magellan
+                 log.log( Level.SEVERE, "Be sure to include ALL relevant console errors and Minecraft crash reports" );
+-                log.log( Level.SEVERE, "Andromeda version: " + Bukkit.getServer().getVersion() ); // Purpur
++                log.log( Level.SEVERE, "Magellan version: " + Bukkit.getServer().getVersion() ); // Purpur // Magellan
+                 //
+                 if ( net.minecraft.world.level.Level.lastPhysicsProblem != null )
+                 {
+@@ -185,12 +185,12 @@ public final class WatchdogThread extends io.papermc.paper.util.TickThread // Pa
+                 // Paper end
+                 } else
+                 {
+-                    log.log(Level.SEVERE, "--- DO NOT REPORT THIS TO ANDROMEDA - THIS IS NOT A BUG OR A CRASH  - " + Bukkit.getServer().getVersion() + " ---"); // Purpur // Andromeda
++                    log.log(Level.SEVERE, "--- DO NOT REPORT THIS TO MAGELLAN - THIS IS NOT A BUG OR A CRASH  - " + Bukkit.getServer().getVersion() + " ---"); // Purpur // Andromeda // Magellan
+                     log.log(Level.SEVERE, "The server has not responded for " + (currentTime - lastTick) / 1000 + " seconds! Creating thread dump");
+                 }
+                 // Paper end - Different message for short timeout
+                 log.log( Level.SEVERE, "------------------------------" );
+-                log.log( Level.SEVERE, "Server thread dump (Look for plugins here before reporting to Andromeda!):" ); // Paper // Purpur // Andromeda
++                log.log( Level.SEVERE, "Server thread dump (Look for plugins here before reporting to Magellan!):" ); // Paper // Purpur // Andromeda // Magellan
+                 io.papermc.paper.chunk.system.scheduling.ChunkTaskScheduler.dumpAllChunkLoadInfo(isLongTimeout); // Paper // Paper - rewrite chunk system
+                 this.dumpTickingInfo(); // Paper - log detailed tick information
+                 WatchdogThread.dumpThread( ManagementFactory.getThreadMXBean().getThreadInfo( MinecraftServer.getServer().serverThread.getId(), Integer.MAX_VALUE ), log );
+@@ -206,7 +206,7 @@ public final class WatchdogThread extends io.papermc.paper.util.TickThread // Pa
+                     WatchdogThread.dumpThread( thread, log );
+                 }
+                 } else {
+-                    log.log(Level.SEVERE, "--- DO NOT REPORT THIS TO ANDROMEDA - THIS IS NOT A BUG OR A CRASH ---"); // Purpur // Andromeda
++                    log.log(Level.SEVERE, "--- DO NOT REPORT THIS TO MAGELLAN - THIS IS NOT A BUG OR A CRASH ---"); // Purpur // Andromeda // Magellan
+                 }
+ 
+                 log.log( Level.SEVERE, "------------------------------" );

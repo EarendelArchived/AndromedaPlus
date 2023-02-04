@@ -1,0 +1,860 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: AlphaKR93 <alphakr93@gmail.com>
+Date: Thu, 19 Jan 2023 18:01:23 +0900
+Subject: [PATCH] Magellan Configuration
+
+
+diff --git a/src/main/java/io/papermc/paper/configuration/InnerClassFieldDiscoverer.java b/src/main/java/io/papermc/paper/configuration/InnerClassFieldDiscoverer.java
+index 69e92e493e5821e7b3e511f171ec6afd7ea36f0b..d9f4079f533cc8aec56e75744377a2b433b6c11b 100644
+--- a/src/main/java/io/papermc/paper/configuration/InnerClassFieldDiscoverer.java
++++ b/src/main/java/io/papermc/paper/configuration/InnerClassFieldDiscoverer.java
+@@ -151,4 +151,16 @@ public final class InnerClassFieldDiscoverer implements FieldDiscoverer<Map<Fiel
+         return new InnerClassFieldDiscoverer(overrides);
+     }
+     // Andromeda end
++
++    // Magellan start
++    public static FieldDiscoverer<?> magellanLevelConfiguration(Configurations.ContextMap contextMap) {
++        final Map<Class<?>, Object> overrides = Map.of(
++                team.earendel.magellan.configurations.LevelConfigurations.class,
++                new team.earendel.magellan.configurations.LevelConfigurations(
++                        contextMap.require(Configurations.WORLD_KEY)
++                )
++        );
++        return new InnerClassFieldDiscoverer(overrides);
++    }
++    // Magellan end
+ }
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index 45a24d0f6bb4aedf40976a51a78286da51866d54..bf5d3b17e492ed7de6878040dc4ea8d1827df739 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -306,6 +306,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+     // Spigot end
+     public final io.papermc.paper.configuration.PaperConfigurations paperConfigurations;
+     public final team.earendel.andromeda.configurations.AndromedaConfigurations andromedaConfigurations;
++    public final team.earendel.magellan.configurations.MagellanConfigurations magellanConfigurations;
+     public static long currentTickLong = 0L; // Paper
+     public boolean lagging = false; // Purpur
+     protected boolean upnp = false; // Purpur
+@@ -414,6 +415,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+         Runtime.getRuntime().addShutdownHook(new org.bukkit.craftbukkit.util.ServerShutdownThread(this));
+         this.paperConfigurations = services.paperConfigurations(); // Paper
+         this.andromedaConfigurations = services.andromedaConfigurations();
++        this.magellanConfigurations = services.magellanConfigurations();
+     }
+     // CraftBukkit end
+ 
+diff --git a/src/main/java/net/minecraft/server/Services.java b/src/main/java/net/minecraft/server/Services.java
+index 9a69831c7645a00fe3b3276a82b67112f0aea5d9..35dd2f74f9e8ae1ed3117bdf2af038b0d40cb6aa 100644
+--- a/src/main/java/net/minecraft/server/Services.java
++++ b/src/main/java/net/minecraft/server/Services.java
+@@ -8,10 +8,10 @@ import net.minecraft.server.players.GameProfileCache;
+ import net.minecraft.util.SignatureValidator;
+ 
+ // Paper start
+-public record Services(MinecraftSessionService sessionService, SignatureValidator serviceSignatureValidator, GameProfileRepository profileRepository, GameProfileCache profileCache, @javax.annotation.Nullable io.papermc.paper.configuration.PaperConfigurations paperConfigurations, @javax.annotation.Nullable team.earendel.andromeda.configurations.AndromedaConfigurations andromedaConfigurations) { // Andromeda
++public record Services(MinecraftSessionService sessionService, SignatureValidator serviceSignatureValidator, GameProfileRepository profileRepository, GameProfileCache profileCache, @javax.annotation.Nullable io.papermc.paper.configuration.PaperConfigurations paperConfigurations, @javax.annotation.Nullable team.earendel.andromeda.configurations.AndromedaConfigurations andromedaConfigurations, @javax.annotation.Nullable team.earendel.magellan.configurations.MagellanConfigurations magellanConfigurations) { // Andromeda // Magellan
+ 
+     public Services(MinecraftSessionService sessionService, SignatureValidator signatureValidator, GameProfileRepository profileRepository, GameProfileCache profileCache) {
+-        this(sessionService, signatureValidator, profileRepository, profileCache, null, null); // Andromeda
++        this(sessionService, signatureValidator, profileRepository, profileCache, null, null, null); // Andromeda // Magellan
+     }
+ 
+     @Override
+@@ -27,6 +27,13 @@ public record Services(MinecraftSessionService sessionService, SignatureValidato
+     }
+     // Andromeda end
+ 
++    // Magellan start
++    @Override
++    public team.earendel.magellan.configurations.MagellanConfigurations magellanConfigurations() {
++        return java.util.Objects.requireNonNull(this.magellanConfigurations);
++    }
++    // Magellan end
++
+     public static final String USERID_CACHE_FILE = "usercache.json"; // Paper - private -> public
+ 
+     public static Services create(YggdrasilAuthenticationService authenticationService, File rootDirectory, File userCacheFile, joptsimple.OptionSet optionSet) throws Exception { // Paper
+@@ -42,7 +49,12 @@ public record Services(MinecraftSessionService sessionService, SignatureValidato
+         final java.nio.file.Path legacyAndromedaConfigurationPath = ((File) optionSet.valueOf("andromeda-configurations")).toPath();
+         final java.nio.file.Path andromedaConfigurationDirPath = ((File) optionSet.valueOf("andromeda-configurations-directory")).toPath();
+         team.earendel.andromeda.configurations.AndromedaConfigurations andromedaConfigurations = team.earendel.andromeda.configurations.AndromedaConfigurations.setup(legacyAndromedaConfigurationPath, andromedaConfigurationDirPath);
+-        return new Services(minecraftSessionService, signatureValidator, gameProfileRepository, gameProfileCache, paperConfigurations, andromedaConfigurations);
++        // Magellan start
++        final java.nio.file.Path legacyMagellanConfigurationPath = ((File) optionSet.valueOf("magellan-configurations")).toPath();
++        final java.nio.file.Path magellanConfigurationDirPath = ((File) optionSet.valueOf("magellan-configurations-directory")).toPath();
++        team.earendel.magellan.configurations.MagellanConfigurations magellanConfigurations = team.earendel.magellan.configurations.MagellanConfigurations.setup(legacyMagellanConfigurationPath, magellanConfigurationDirPath);
++        return new Services(minecraftSessionService, signatureValidator, gameProfileRepository, gameProfileCache, paperConfigurations, andromedaConfigurations, magellanConfigurations);
++        // Magellan end
+         // Andromeda end
+         // Paper end
+     }
+diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
+index ed93fdcd80cc2d78fe10111fe5228bb06b82435e..80b1b2f05d12c5dd9afc41bb69d073df7a92f213 100644
+--- a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
++++ b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
+@@ -202,6 +202,10 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+         andromedaConfigurations.initializeGlobalConfiguration();
+         andromedaConfigurations.initializeWorldDefaultsConfiguration();
+         // Andromeda end
++        // Magellan start
++        magellanConfigurations.initializeGlobalConfiguration();
++        magellanConfigurations.initializeWorldDefaultsConfiguration();
++        // Magellan end
+         // Paper start - moved up to right after PlayerList creation but before file load/save
+         if (this.convertOldUsers()) {
+             this.getProfileCache().save(false); // Paper
+@@ -212,6 +216,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+         thread.start(); // Paper - start console thread after MinecraftServer.console & PaperConfig are initialized
+         io.papermc.paper.command.PaperCommands.registerCommands(this);
+         team.earendel.andromeda.commands.AndromedaCommands.registerCommands(this);
++        team.earendel.magellan.commands.MagellanCommands.registerCommands(this);
+         com.destroystokyo.paper.Metrics.PaperMetrics.startMetrics();
+         // Purpur start
+         try {
+diff --git a/src/main/java/net/minecraft/server/level/ServerLevel.java b/src/main/java/net/minecraft/server/level/ServerLevel.java
+index 3d0f8578eb31d3e718df9641033641c93b360570..065764a4ce125cea486a039d8335fd78ab153446 100644
+--- a/src/main/java/net/minecraft/server/level/ServerLevel.java
++++ b/src/main/java/net/minecraft/server/level/ServerLevel.java
+@@ -530,7 +530,7 @@ public class ServerLevel extends Level implements WorldGenLevel {
+     public ServerLevel(MinecraftServer minecraftserver, Executor executor, LevelStorageSource.LevelStorageAccess convertable_conversionsession, PrimaryLevelData iworlddataserver, ResourceKey<Level> resourcekey, LevelStem worlddimension, ChunkProgressListener worldloadlistener, boolean flag, long i, List<CustomSpawner> list, boolean flag1, org.bukkit.World.Environment env, org.bukkit.generator.ChunkGenerator gen, org.bukkit.generator.BiomeProvider biomeProvider) {
+         // Holder holder = worlddimension.type(); // CraftBukkit - decompile error
+         // Objects.requireNonNull(minecraftserver); // CraftBukkit - decompile error
+-        super(iworlddataserver, resourcekey, worlddimension.type(), minecraftserver::getProfiler, false, flag, i, minecraftserver.getMaxChainedNeighborUpdates(), gen, biomeProvider, env, spigotConfig -> minecraftserver.paperConfigurations.createWorldConfig(io.papermc.paper.configuration.PaperConfigurations.createWorldContextMap(convertable_conversionsession.levelDirectory.path(), iworlddataserver.getLevelName(), resourcekey.location(), spigotConfig)), spigotConfig -> minecraftserver.andromedaConfigurations.createWorldConfig(io.papermc.paper.configuration.PaperConfigurations.createWorldContextMap(convertable_conversionsession.levelDirectory.path(), iworlddataserver.getLevelName(), resourcekey.location(), spigotConfig)), executor); // Paper - Async-Anti-Xray - Pass executor // Andromeda
++        super(iworlddataserver, resourcekey, worlddimension.type(), minecraftserver::getProfiler, false, flag, i, minecraftserver.getMaxChainedNeighborUpdates(), gen, biomeProvider, env, spigotConfig -> minecraftserver.paperConfigurations.createWorldConfig(io.papermc.paper.configuration.PaperConfigurations.createWorldContextMap(convertable_conversionsession.levelDirectory.path(), iworlddataserver.getLevelName(), resourcekey.location(), spigotConfig)), spigotConfig -> minecraftserver.andromedaConfigurations.createWorldConfig(io.papermc.paper.configuration.PaperConfigurations.createWorldContextMap(convertable_conversionsession.levelDirectory.path(), iworlddataserver.getLevelName(), resourcekey.location(), spigotConfig)), spigotConfig -> minecraftserver.magellanConfigurations.createWorldConfig(io.papermc.paper.configuration.PaperConfigurations.createWorldContextMap(convertable_conversionsession.levelDirectory.path(), iworlddataserver.getLevelName(), resourcekey.location(), spigotConfig)), executor); // Paper - Async-Anti-Xray - Pass executor // Andromeda // Magellan
+         this.pvpMode = minecraftserver.isPvpAllowed();
+         this.convertable = convertable_conversionsession;
+         this.uuid = WorldUUID.getUUID(convertable_conversionsession.levelDirectory.path().toFile());
+diff --git a/src/main/java/net/minecraft/world/level/Level.java b/src/main/java/net/minecraft/world/level/Level.java
+index 65cf213c6bf41f6a29c508ebcf3b13f9fe26df37..ce871be3a145e270a8d156dcde43a8ba57a5167b 100644
+--- a/src/main/java/net/minecraft/world/level/Level.java
++++ b/src/main/java/net/minecraft/world/level/Level.java
+@@ -177,6 +177,12 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
+         return this.andromedaLevelConfiguration;
+     }
+     // Andromeda end
++    // Magellan start
++    private final team.earendel.magellan.configurations.LevelConfigurations magellanLevelConfiguration;
++    public team.earendel.magellan.configurations.LevelConfigurations magellanLevelConfiguration() {
++        return this.magellanLevelConfiguration;
++    }
++    // Magellan end
+     public final com.destroystokyo.paper.antixray.ChunkPacketBlockController chunkPacketBlockController; // Paper - Anti-Xray
+     public final org.purpurmc.purpur.PurpurWorldConfig purpurConfig; // Purpur
+ 
+@@ -339,10 +345,11 @@ public abstract class Level implements LevelAccessor, AutoCloseable {
+     @Override public final int getHeight() { return this.height; }
+     // Pufferfish end
+ 
+-    protected Level(WritableLevelData worlddatamutable, ResourceKey<Level> resourcekey, Holder<DimensionType> holder, Supplier<ProfilerFiller> supplier, boolean flag, boolean flag1, long i, int j, org.bukkit.generator.ChunkGenerator gen, org.bukkit.generator.BiomeProvider biomeProvider, org.bukkit.World.Environment env, java.util.function.Function<org.spigotmc.SpigotWorldConfig, io.papermc.paper.configuration.WorldConfiguration> paperWorldConfigCreator, java.util.function.Function<org.spigotmc.SpigotWorldConfig, team.earendel.andromeda.configurations.LevelConfigurations> andromedaLevelConfigurationCreator, java.util.concurrent.Executor executor) { // Paper - Async-Anti-Xray - Pass executor
++    protected Level(WritableLevelData worlddatamutable, ResourceKey<Level> resourcekey, Holder<DimensionType> holder, Supplier<ProfilerFiller> supplier, boolean flag, boolean flag1, long i, int j, org.bukkit.generator.ChunkGenerator gen, org.bukkit.generator.BiomeProvider biomeProvider, org.bukkit.World.Environment env, java.util.function.Function<org.spigotmc.SpigotWorldConfig, io.papermc.paper.configuration.WorldConfiguration> paperWorldConfigCreator, java.util.function.Function<org.spigotmc.SpigotWorldConfig, team.earendel.andromeda.configurations.LevelConfigurations> andromedaLevelConfigurationCreator, java.util.function.Function<org.spigotmc.SpigotWorldConfig, team.earendel.magellan.configurations.LevelConfigurations> magellanLevelConfigurationCreator, java.util.concurrent.Executor executor) { // Paper - Async-Anti-Xray - Pass executor // Magellan
+         this.spigotConfig = new org.spigotmc.SpigotWorldConfig(((net.minecraft.world.level.storage.PrimaryLevelData) worlddatamutable).getLevelName()); // Spigot
+         this.paperConfig = paperWorldConfigCreator.apply(this.spigotConfig); // Paper
+         this.andromedaLevelConfiguration = andromedaLevelConfigurationCreator.apply(this.spigotConfig); // Andromeda
++        this.magellanLevelConfiguration = magellanLevelConfigurationCreator.apply(this.spigotConfig); // Magellan
+         this.purpurConfig = new org.purpurmc.purpur.PurpurWorldConfig(((net.minecraft.world.level.storage.PrimaryLevelData) worlddatamutable).getLevelName(), env); // Purpur
+         this.playerBreedingCooldowns = this.getNewBreedingCooldownCache(); // Purpur
+         this.generator = gen;
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+index f14bebb941a9633198ec1f6eb7043c2651504327..b38ff43329f3ddceef89fc3dd854763a962433ae 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+@@ -1033,6 +1033,7 @@ public final class CraftServer implements Server {
+         org.spigotmc.SpigotConfig.init((File) console.options.valueOf("spigot-settings")); // Spigot
+         this.console.paperConfigurations.reloadConfigs(this.console);
+         this.console.andromedaConfigurations.reloadConfigurations(this.console); // Andromeda
++        this.console.magellanConfigurations.reloadConfigurations(this.console); // Magellan
+         org.purpurmc.purpur.PurpurConfig.init((File) console.options.valueOf("purpur-settings")); // Purpur
+         for (ServerLevel world : this.console.getAllLevels()) {
+             // world.serverLevelData.setDifficulty(config.difficulty); // Paper - per level difficulty
+@@ -2883,6 +2884,13 @@ public final class CraftServer implements Server {
+         }
+         // Andromeda end
+ 
++        // Magellan start
++        @Override
++        public YamlConfiguration getMagellanConfiguration() {
++            return CraftServer.this.console.magellanConfigurations.createLegacyObject(CraftServer.this.console);
++        }
++        // Magellan end
++
+         // Purpur start
+         @Override
+         public YamlConfiguration getPurpurConfig() {
+diff --git a/src/main/java/org/bukkit/craftbukkit/Main.java b/src/main/java/org/bukkit/craftbukkit/Main.java
+index 193487b0944cd4bb200ae621c817708e873d95b5..0a20491fe6dac8184c9bb7d991a031a6ab54e1c1 100644
+--- a/src/main/java/org/bukkit/craftbukkit/Main.java
++++ b/src/main/java/org/bukkit/craftbukkit/Main.java
+@@ -179,6 +179,19 @@ public class Main {
+                         .describedAs("Yml file");
+                 // Andromeda end
+ 
++                // Magellan start
++                acceptsAll(asList("magellan-dir", "magellan-configurations-directory"), "Directory for Magellan configurations")
++                        .withRequiredArg()
++                        .ofType(File.class)
++                        .defaultsTo(new File(io.papermc.paper.configuration.PaperConfigurations.CONFIG_DIR))
++                        .describedAs("Config directory");
++                acceptsAll(asList("magellan", "magellan-configurations"), "File for Magellan configurations")
++                        .withRequiredArg()
++                        .ofType(File.class)
++                        .defaultsTo(new File("magellan.yml"))
++                        .describedAs("Yml file");
++                // Magellan end
++
+                 // Purpur Start
+                 acceptsAll(asList("purpur", "purpur-settings"), "File for purpur settings")
+                     .withRequiredArg()
+diff --git a/src/main/java/team/earendel/magellan/commands/MagellanCommand.java b/src/main/java/team/earendel/magellan/commands/MagellanCommand.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..8bd6953a0921bab93a1afe8a9e295f771c68daed
+--- /dev/null
++++ b/src/main/java/team/earendel/magellan/commands/MagellanCommand.java
+@@ -0,0 +1,126 @@
++package team.earendel.magellan.commands;
++
++import io.papermc.paper.command.CommandUtil;
++import it.unimi.dsi.fastutil.Pair;
++import net.kyori.adventure.text.format.NamedTextColor;
++import net.minecraft.Util;
++import org.bukkit.Bukkit;
++import org.bukkit.command.Command;
++import org.bukkit.command.CommandSender;
++import org.bukkit.permissions.Permission;
++import org.bukkit.permissions.PermissionDefault;
++import org.bukkit.plugin.PluginManager;
++import org.checkerframework.checker.nullness.qual.NonNull;
++import org.checkerframework.checker.nullness.qual.Nullable;
++import org.checkerframework.framework.qual.DefaultQualifier;
++import team.earendel.magellan.commands.subcommands.MagellanSubCommand;
++import team.earendel.magellan.commands.subcommands.ReloadCommand;
++import team.earendel.magellan.commands.subcommands.VersionCommand;
++
++import java.util.*;
++import java.util.stream.Collectors;
++
++import static net.kyori.adventure.text.Component.text;
++
++@DefaultQualifier(NonNull.class)
++public class MagellanCommand extends Command {
++
++    private static final Map<String, MagellanSubCommand> SUB_COMMANDS = Util.make(() -> {
++        final Map<Set<String>, MagellanSubCommand> commands = new HashMap<>();
++
++        commands.put(Set.of("reload"), new ReloadCommand());
++        commands.put(Set.of("version"), new VersionCommand());
++
++        return commands.entrySet().stream()
++                .flatMap(entry -> entry.getKey().stream().map(key -> Map.entry(key, entry.getValue())))
++                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
++    });
++
++    private static final Map<String, String> ALIASES = Util.make(() -> {
++        final Map<String, Set<String>> aliases = new HashMap<>();
++
++        aliases.put("reload", Set.of("rl"));
++        aliases.put("version", Set.of("ver"));
++
++        return aliases.entrySet().stream()
++                .flatMap(entry -> entry.getValue().stream().map(s -> Map.entry(s, entry.getKey())))
++                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
++    });
++
++    public MagellanCommand(final String name) {
++        super(name);
++
++        final PluginManager pluginManager = Bukkit.getServer().getPluginManager();
++
++        final List<String> permissions = new ArrayList<>();
++        permissions.add("bukkit.command.magellan");
++        permissions.addAll(SUB_COMMANDS.keySet().stream().map(s -> "bukkit.command.magellan." + s).toList());
++
++        this.description = "Magellan related commands";
++        this.usageMessage = String.format("/magellan [%s]", String.join("|", SUB_COMMANDS.keySet()));
++        this.setPermission(String.join(";", permissions));
++
++        for (final String perm : permissions)
++            pluginManager.addPermission(new Permission(perm, PermissionDefault.OP));
++    }
++
++    @Override
++    public List<String> tabComplete(final CommandSender sender, final String aliases, final String[] args) throws IllegalArgumentException {
++        if (args.length <= 1)
++            return CommandUtil.getListMatchingLast(sender, args, SUB_COMMANDS.keySet());
++
++        final @Nullable Pair<String, MagellanSubCommand> subCommand = resolveSubCommand(args[0]);
++        if (subCommand != null)
++            return subCommand.second().tabComplete(sender, subCommand.first(), Arrays.copyOfRange(args, 1, args.length));
++
++        return Collections.emptyList();
++    }
++
++    @Override
++    public boolean execute(final CommandSender sender, final String commandLabel, final String[] args) {
++        if (!testPermission(sender)) return true;
++
++        if (args.length == 0) {
++            sender.sendMessage(text("Usage: " + this.usageMessage, NamedTextColor.RED));
++            return false;
++        }
++
++        final @Nullable Pair<String, MagellanSubCommand> subCommand = resolveSubCommand(args[0]);
++
++        if (subCommand == null) {
++            sender.sendMessage(text("Usage: " + this.usageMessage, NamedTextColor.RED));
++            return false;
++        }
++
++        if (!testPermission(sender, subCommand.first())) return true;
++
++        final String[] choppedArgs = Arrays.copyOfRange(args, 1, args.length);
++        return subCommand.second().execute(sender, subCommand.first(), choppedArgs);
++    }
++
++    private static @Nullable Pair<String, MagellanSubCommand> resolveSubCommand(String label) {
++        label = label.toLowerCase(Locale.ENGLISH);
++        @Nullable MagellanSubCommand subCommand = SUB_COMMANDS.get(label);
++
++        if (subCommand == null) {
++            final @Nullable String command = ALIASES.get(label);
++            if (command != null) {
++                label = command;
++                subCommand = SUB_COMMANDS.get(command);
++            }
++        }
++
++        if (subCommand != null)
++            return Pair.of(label, subCommand);
++
++        return null;
++    }
++
++    private static boolean testPermission(final CommandSender sender, final String permission) {
++        if (sender.hasPermission("bukkit.command.magellan." + permission) || sender.hasPermission("bukkit.command.magellan"))
++            return true;
++
++        sender.sendMessage(Bukkit.permissionMessage());
++        return false;
++    }
++}
+diff --git a/src/main/java/team/earendel/magellan/commands/MagellanCommands.java b/src/main/java/team/earendel/magellan/commands/MagellanCommands.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..47ce9a971b67a843d6e548ae6c165f3b2df84639
+--- /dev/null
++++ b/src/main/java/team/earendel/magellan/commands/MagellanCommands.java
+@@ -0,0 +1,25 @@
++package team.earendel.magellan.commands;
++
++import net.minecraft.server.MinecraftServer;
++import org.bukkit.command.Command;
++import org.checkerframework.checker.nullness.qual.NonNull;
++import org.checkerframework.framework.qual.DefaultQualifier;
++
++import java.util.HashMap;
++import java.util.Map;
++
++@DefaultQualifier(NonNull.class)
++public final class MagellanCommands {
++
++    private MagellanCommands() {}
++
++    private static final Map<String, Command> COMMANDS = new HashMap<>();
++    static {
++        COMMANDS.put("magellan", new MagellanCommand("magellan"));
++    }
++
++    public static void registerCommands(final MinecraftServer server) {
++        COMMANDS.forEach((s, command) -> server.server.getCommandMap().register(s, "Magellan", command));
++    }
++
++}
+diff --git a/src/main/java/team/earendel/magellan/commands/subcommands/MagellanSubCommand.java b/src/main/java/team/earendel/magellan/commands/subcommands/MagellanSubCommand.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..2fbf18b86237883138b3d64c01e640824f08fee7
+--- /dev/null
++++ b/src/main/java/team/earendel/magellan/commands/subcommands/MagellanSubCommand.java
+@@ -0,0 +1,17 @@
++package team.earendel.magellan.commands.subcommands;
++
++import org.bukkit.command.CommandSender;
++import org.checkerframework.checker.nullness.qual.NonNull;
++import org.checkerframework.framework.qual.DefaultQualifier;
++
++import java.util.Collections;
++import java.util.List;
++
++@DefaultQualifier(NonNull.class)
++public interface MagellanSubCommand {
++    boolean execute(CommandSender sender, String subCommand, String[] args);
++
++    default List<String> tabComplete(final CommandSender sender, final String subCommand, final String[] args) {
++        return Collections.emptyList();
++    }
++}
+diff --git a/src/main/java/team/earendel/magellan/commands/subcommands/ReloadCommand.java b/src/main/java/team/earendel/magellan/commands/subcommands/ReloadCommand.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..bf047ce32582b77b348903dd5f2553770dc1aa0d
+--- /dev/null
++++ b/src/main/java/team/earendel/magellan/commands/subcommands/ReloadCommand.java
+@@ -0,0 +1,28 @@
++package team.earendel.magellan.commands.subcommands;
++
++import net.kyori.adventure.text.format.NamedTextColor;
++import net.minecraft.server.MinecraftServer;
++import org.bukkit.command.Command;
++import org.bukkit.command.CommandSender;
++import org.bukkit.craftbukkit.CraftServer;
++
++import static net.kyori.adventure.text.Component.text;
++
++public class ReloadCommand implements MagellanSubCommand {
++
++    @Override
++    public boolean execute(CommandSender sender, String subCommand, String[] args) {
++        return true;
++    }
++
++    private void doReload(final CommandSender sender) {
++        Command.broadcastCommandMessage(sender, text("Please note that this command is not supported and may cause issues.", NamedTextColor.RED));
++        Command.broadcastCommandMessage(sender, text("If you encounter any issues please use the /stop command to restart your server.", NamedTextColor.RED));
++
++        MinecraftServer server = ((CraftServer) sender.getServer()).getServer();
++        server.magellanConfigurations.reloadConfigurations(server);
++        server.server.reloadCount++;
++
++        Command.broadcastCommandMessage(sender, text("Successfully reloaded Magellan configuration files.", NamedTextColor.GREEN));
++    }
++}
+diff --git a/src/main/java/team/earendel/magellan/commands/subcommands/VersionCommand.java b/src/main/java/team/earendel/magellan/commands/subcommands/VersionCommand.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..43147bef990a1ca041bce8d94e7abc5b786a0bac
+--- /dev/null
++++ b/src/main/java/team/earendel/magellan/commands/subcommands/VersionCommand.java
+@@ -0,0 +1,15 @@
++package team.earendel.magellan.commands.subcommands;
++
++import net.minecraft.server.MinecraftServer;
++import org.bukkit.command.Command;
++import org.bukkit.command.CommandSender;
++import org.checkerframework.checker.nullness.qual.Nullable;
++
++public class VersionCommand implements MagellanSubCommand {
++    @Override
++    public boolean execute(CommandSender sender, String subCommand, String[] args) {
++        final @Nullable Command ver = MinecraftServer.getServer().server.getCommandMap().getCommand("version");
++        if (ver != null) ver.execute(sender, "magellan", new String[0]);
++        return true;
++    }
++}
+diff --git a/src/main/java/team/earendel/magellan/configurations/GlobalConfiguration.java b/src/main/java/team/earendel/magellan/configurations/GlobalConfiguration.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..d16f47f5e683084366f2c1527070045b739d51bf
+--- /dev/null
++++ b/src/main/java/team/earendel/magellan/configurations/GlobalConfiguration.java
+@@ -0,0 +1,22 @@
++package team.earendel.magellan.configurations;
++
++import io.papermc.paper.configuration.Configuration;
++import io.papermc.paper.configuration.ConfigurationPart;
++import org.spongepowered.configurate.objectmapping.meta.Setting;
++
++@SuppressWarnings({"CanBeFinal", "FieldCanBeLocal", "FieldMayBeFinal", "NotNullFieldNotInitialized", "InnerClassMayBeStatic"})
++public class GlobalConfiguration extends ConfigurationPart {
++    static final int CURRENT_VERSION = 1;
++    private static GlobalConfiguration instance;
++
++    public static GlobalConfiguration get() {
++        return instance;
++    }
++
++    static void set(GlobalConfiguration instance) {
++        GlobalConfiguration.instance = instance;
++    }
++
++    @Setting(Configuration.VERSION_FIELD)
++    public int version = CURRENT_VERSION;
++}
+diff --git a/src/main/java/team/earendel/magellan/configurations/LevelConfigurations.java b/src/main/java/team/earendel/magellan/configurations/LevelConfigurations.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..fdcb1f45101c241004844b7b43300bb37020ed6b
+--- /dev/null
++++ b/src/main/java/team/earendel/magellan/configurations/LevelConfigurations.java
+@@ -0,0 +1,24 @@
++package team.earendel.magellan.configurations;
++
++import io.papermc.paper.configuration.Configuration;
++import io.papermc.paper.configuration.ConfigurationPart;
++import io.papermc.paper.configuration.PaperConfigurations;
++import net.minecraft.resources.ResourceLocation;
++import org.spongepowered.configurate.objectmapping.meta.Setting;
++
++@SuppressWarnings({"FieldCanBeLocal", "FieldMayBeFinal", "NotNullFieldNotInitialized", "InnerClassMayBeStatic"})
++public class LevelConfigurations extends ConfigurationPart {
++    public static final int CURRENT_VERSION = 1;
++
++    private transient final ResourceLocation worldKey;
++    public LevelConfigurations(ResourceLocation worldKey) {
++        this.worldKey = worldKey;
++    }
++
++    public boolean isDefault() {
++        return this.worldKey.equals(PaperConfigurations.WORLD_DEFAULTS_KEY);
++    }
++
++    @Setting(Configuration.VERSION_FIELD)
++    public int version = CURRENT_VERSION;
++}
+diff --git a/src/main/java/team/earendel/magellan/configurations/MagellanConfigurations.java b/src/main/java/team/earendel/magellan/configurations/MagellanConfigurations.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..b4a507315b2e3fbb308e5ad575b065fbae5839cf
+--- /dev/null
++++ b/src/main/java/team/earendel/magellan/configurations/MagellanConfigurations.java
+@@ -0,0 +1,331 @@
++package team.earendel.magellan.configurations;
++
++import com.google.common.collect.Table;
++import com.mojang.logging.LogUtils;
++import io.leangen.geantyref.TypeToken;
++import io.papermc.paper.configuration.*;
++import io.papermc.paper.configuration.legacy.RequiresSpigotInitialization;
++import io.papermc.paper.configuration.serializer.ComponentSerializer;
++import io.papermc.paper.configuration.serializer.EnumValueSerializer;
++import io.papermc.paper.configuration.serializer.PacketClassSerializer;
++import io.papermc.paper.configuration.serializer.StringRepresentableSerializer;
++import io.papermc.paper.configuration.serializer.collections.FastutilMapSerializer;
++import io.papermc.paper.configuration.serializer.collections.MapSerializer;
++import io.papermc.paper.configuration.serializer.collections.TableSerializer;
++import io.papermc.paper.configuration.serializer.registry.RegistryHolderSerializer;
++import io.papermc.paper.configuration.serializer.registry.RegistryValueSerializer;
++import io.papermc.paper.configuration.transformation.Transformations;
++import io.papermc.paper.configuration.type.*;
++import io.papermc.paper.configuration.type.fallback.FallbackValueSerializer;
++import it.unimi.dsi.fastutil.objects.Reference2IntMap;
++import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
++import it.unimi.dsi.fastutil.objects.Reference2LongMap;
++import it.unimi.dsi.fastutil.objects.Reference2LongOpenHashMap;
++import net.minecraft.core.registries.Registries;
++import net.minecraft.server.MinecraftServer;
++import net.minecraft.server.level.ServerLevel;
++import net.minecraft.world.entity.EntityType;
++import net.minecraft.world.item.Item;
++import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
++import org.jetbrains.annotations.VisibleForTesting;
++import org.slf4j.Logger;
++import org.spongepowered.configurate.*;
++import org.spongepowered.configurate.objectmapping.ObjectMapper;
++import org.spongepowered.configurate.transformation.ConfigurationTransformation;
++import org.spongepowered.configurate.transformation.TransformAction;
++import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
++
++import java.io.IOException;
++import java.lang.reflect.Type;
++import java.nio.file.Files;
++import java.nio.file.Path;
++import java.util.Collections;
++import java.util.List;
++import java.util.function.Function;
++
++import static io.leangen.geantyref.GenericTypeReflector.erase;
++
++@SuppressWarnings("Convert2Diamond")
++public class MagellanConfigurations extends Configurations<GlobalConfiguration, LevelConfigurations> {
++
++    private static final Logger LOGGER = LogUtils.getLogger();
++    static final String GLOBAL_CONFIGURATION_FILE_NAME= "magellan-global.yml";
++    static final String LEVEL_DEFAULT_CONFIGURATION_FILE_NAME = "magellan-level-dafaults.yml";
++    static final String LEVEL_CONFIGURATION_FILE_NAME = "magellan-configuration.yml";
++
++    private static final String HEADER_START = """
++            # English
++            This is the %s configuration file for Magellan.
++            As you can see, there's a lot to configure. Some options may impact gameplay,
++            so use with caution, and make sure you know what each option does before configuring.
++            
++            If you need help with the configuration or have any questions related to Magellan,
++            join us in our Discord for Magellan, or check the GitHub Wiki pages.
++            
++            %s
++            
++            # 한국어
++            본 파일은 Magellan의 %s 구성 파일입니다.
++            보시다시피, 굉장히 많은 설정이 있습니다. 몇몇 설정은 게임플레이에 영향을 줄 수 있으므로,
++            주의해서 사용하시기 바라며, 각 설정이 어떠한 역할을 하는지 알고 사용하시기 바랍니다.
++            
++            만약 구성에 관한 도움이 필요하거나 Magellan에 관련한 질문이 있으시다면,
++            Discord 또는 네이버 카페에 가입하거나, GitHub 위키 페이지를 참고하시기 바랍니다.
++            
++            %s
++            
++            Wiki: https://github.com/TeamEarendel/Magellan/wiki
++            Discord: *COMMING SOON*
++            Twitter: *COMMING SOON*
++            Naver Cafe: *COMMING SOON*
++            """;
++
++    private static final Function<Configurations.ContextMap, String> LEVEL_SPECIFIC_HEADER = map -> String.format("""
++            # English
++            This is a level specific configuration file for Magellan.
++            This file may start empty, but can be filled with settings to override ones in the %s/%s
++            
++            If you need help with the configuration or have any questions related to Magellan,
++            join us in our Discord for Magellan, or check the GitHub Wiki pages.
++            
++            
++            # 한국어
++            본 파일은 Magellan의 레벨별 구성 파일입니다.
++            이 파일은 비어있을 수 있지만, %s/%s 파일의 설정을 덮어쓰기 위해 설정을 채울 수 있습니다.
++            
++            만약 구성에 관한 도움이 필요하거나 Magellan에 관련한 질문이 있으시다면,
++            Discord 또는 네이버 카페에 가입하거나, GitHub 위키 페이지를 참고하시기 바랍니다.
++            
++            
++            Level: %s (%s)
++            
++            Wiki: https://github.com/TeamEarendel/Magellan/wiki
++            Discord: *COMMING SOON*
++            Twitter: *COMMING SOON*
++            Naver Cafe: *COMMING SOON*
++            """, PaperConfigurations.CONFIG_DIR, LEVEL_DEFAULT_CONFIGURATION_FILE_NAME, PaperConfigurations.CONFIG_DIR, LEVEL_DEFAULT_CONFIGURATION_FILE_NAME,
++            map.require(WORLD_NAME), map.require(WORLD_KEY));
++
++    private static final String GLOBAL_HEADER = String.format(HEADER_START,
++            "global", String.format("""
++                    The level configuration options are inside their respective level folder.
++                    The files are named %s
++                    """, LEVEL_CONFIGURATION_FILE_NAME),
++            "전역", String.format("""
++                    레벨 구성 옵션은 각각의 레벨 폴더 안에 있으며, 파일 이름은 %s 입니다.
++                    """, LEVEL_CONFIGURATION_FILE_NAME)
++    );
++
++    private static final String LEVEL_DEFAULTS_HEADER = String.format(HEADER_START,
++            "level defaults", """
++                    Configuration options here apply to all levels, unless you specify overrides inside
++                    the level-specific config file inside each level folder.
++                    """,
++            "기본 레벨", """
++                    이 구성 파일의 설정은 각 레벨 폴더 안 구성 파일에서 덮어쓰기 되지 않는 한 모든 레벨에 적용됩니다.
++                    """
++    );
++
++    private static final String MOVED_NOTICE = """
++            # English
++            The global and level default configuration have moved to %s
++            and the level-specific configuration has been moved inside
++            the respective level folder.
++            
++            See GitHub Wiki for more information.
++            
++            
++            # 한국어
++            전역 및 레벨 전역 구성 파일은 %s 로 이동되었으며, 레벨별 구성 파일은
++            각 레벨 폴더 안으로 이동되었습니다.
++            
++            자세한 내용은 GitHub 위키를 참고하시기 바랍니다.
++            
++            
++            Wiki: https://github.com/TeamEarendel/Magellan/wiki
++            """;
++
++    private static final List<Transformations.DefaultsAware> DEFAULTS_AWARE_TRANSFORMATIONS = Collections.emptyList();
++
++    public MagellanConfigurations(final Path globalFolder) {
++        super(globalFolder, GlobalConfiguration.class, LevelConfigurations.class, GLOBAL_CONFIGURATION_FILE_NAME, LEVEL_DEFAULT_CONFIGURATION_FILE_NAME, LEVEL_CONFIGURATION_FILE_NAME);
++    }
++
++    // Create Loader Builder
++    private static ConfigurationOptions defaultOptions(ConfigurationOptions options) {
++        return options.serializers(builder -> builder
++                .register(MapSerializer.TYPE, new MapSerializer(false))
++                .register(new EnumValueSerializer())
++                .register(new ComponentSerializer())
++        );
++    }
++
++    @Override
++    protected YamlConfigurationLoader.Builder createLoaderBuilder() {
++        return super.createLoaderBuilder().defaultOptions(MagellanConfigurations::defaultOptions);
++    }
++
++    // Create Global Object Mapper Factory Builder
++    private static ObjectMapper.Factory.Builder defaultGlobalFactoryBuilder(ObjectMapper.Factory.Builder builder) {
++        return builder.addDiscoverer(InnerClassFieldDiscoverer.globalConfig());
++    }
++
++    @Override
++    protected ObjectMapper.Factory.Builder createGlobalObjectMapperFactoryBuilder() {
++        return defaultGlobalFactoryBuilder(super.createGlobalObjectMapperFactoryBuilder());
++    }
++
++    // Create Global Loader Builder
++    private static ConfigurationOptions defaultGlobalOptions(ConfigurationOptions options) {
++        return options.header(GLOBAL_HEADER).serializers(builder -> builder.register(new PacketClassSerializer()));
++    }
++
++    @Override
++    protected YamlConfigurationLoader.Builder createGlobalLoaderBuilder() {
++        return super.createGlobalLoaderBuilder().defaultOptions(MagellanConfigurations::defaultGlobalOptions);
++    }
++
++    // Initialize
++    @Override
++    public GlobalConfiguration initializeGlobalConfiguration() throws ConfigurateException {
++        GlobalConfiguration configuration = super.initializeGlobalConfiguration();
++        GlobalConfiguration.set(configuration);
++        return configuration;
++    }
++
++    @Override
++    protected ContextMap.Builder createDefaultContextMap() {
++        return super.createDefaultContextMap().put(PaperConfigurations.SPIGOT_WORLD_CONFIG_CONTEXT_KEY, PaperConfigurations.SPIGOT_WORLD_DEFAULTS);
++    }
++
++    @Override
++    protected ObjectMapper.Factory.Builder createWorldObjectMapperFactoryBuilder(final ContextMap contextMap) {
++        return super.createWorldObjectMapperFactoryBuilder(contextMap)
++                .addNodeResolver(new RequiresSpigotInitialization.Factory(contextMap.require(PaperConfigurations.SPIGOT_WORLD_CONFIG_CONTEXT_KEY).get()))
++                .addNodeResolver(new NestedSetting.Factory())
++                .addDiscoverer(InnerClassFieldDiscoverer.magellanLevelConfiguration(contextMap));
++    }
++
++    @Override
++    protected YamlConfigurationLoader.Builder createWorldConfigLoaderBuilder(final ContextMap contextMap) {
++        return super.createWorldConfigLoaderBuilder(contextMap).defaultOptions(options -> options
++                .header(contextMap.require(WORLD_NAME).equals(WORLD_DEFAULTS) ? LEVEL_DEFAULTS_HEADER : LEVEL_SPECIFIC_HEADER.apply(contextMap))
++                .serializers(serializers -> serializers
++                        .register(new TypeToken<Reference2IntMap<?>>() {}, new FastutilMapSerializer.SomethingToPrimitive<Reference2IntMap<?>>(Reference2IntOpenHashMap::new, Integer.TYPE))
++                        .register(new TypeToken<Reference2LongMap<?>>() {}, new FastutilMapSerializer.SomethingToPrimitive<Reference2LongMap<?>>(Reference2LongOpenHashMap::new, Long.TYPE))
++                        .register(new TypeToken<Table<?, ?, ?>>() {}, new TableSerializer())
++                        .register(new StringRepresentableSerializer())
++                        .register(IntOr.Default.SERIALIZER)
++                        .register(DoubleOrDefault.SERIALIZER)
++                        .register(BooleanOrDefault.SERIALIZER)
++                        .register(Duration.SERIALIZER)
++                        .register(EngineMode.SERIALIZER)
++                        .register(FallbackValueSerializer.create(contextMap.require(PaperConfigurations.SPIGOT_WORLD_CONFIG_CONTEXT_KEY).get(), MinecraftServer::getServer))
++                        .register(new RegistryValueSerializer<>(new TypeToken<EntityType<?>>() {}, Registries.ENTITY_TYPE, true))
++                        .register(new RegistryValueSerializer<>(Item.class, Registries.ITEM, true))
++                        .register(new RegistryHolderSerializer<>(new TypeToken<ConfiguredFeature<?, ?>>() {}, Registries.CONFIGURED_FEATURE, false))
++                        .register(new RegistryHolderSerializer<>(Item.class, Registries.ITEM, true))
++                )
++        );
++    }
++
++    private void applyTransformations(final NodePath[] paths, final ConfigurationNode node) throws ConfigurateException {
++        if (paths.length > 0) {
++            ConfigurationTransformation.Builder builder = ConfigurationTransformation.builder();
++
++            for (NodePath path : paths)
++                builder.addAction(path, TransformAction.remove());
++
++            builder.build().apply(node);
++        }
++    }
++
++    @Override
++    protected void applyGlobalConfigTransformations(final ConfigurationNode node) throws ConfigurateException {
++        applyTransformations(RemovedConfigurations.REMOVED_GLOBAL_PATHS, node);
++    }
++
++    @Override
++    protected void applyWorldConfigTransformations(final ContextMap contextMap, final ConfigurationNode node) throws ConfigurateException {
++        final ConfigurationNode version = node.node(Configuration.VERSION_FIELD);
++        final String world = contextMap.require(WORLD_NAME);
++
++        if (version.virtual()) {
++            LOGGER.warn("The Magellan level configuration file for {} didn't have a version field, assuming latest", world);
++            version.raw(LevelConfigurations.CURRENT_VERSION);
++        }
++
++        applyTransformations(RemovedConfigurations.REMOVED_LEVEL_PATHS, node);
++    }
++
++    @Override
++    protected void applyDefaultsAwareWorldConfigTransformations(final ContextMap contextMap, final ConfigurationNode levelNode, final ConfigurationNode defaultsNode) throws ConfigurateException {
++        final ConfigurationTransformation.Builder builder = ConfigurationTransformation.builder();
++        DEFAULTS_AWARE_TRANSFORMATIONS.forEach(transform -> transform.apply(builder, contextMap, defaultsNode));
++
++        ConfigurationTransformation transformation;
++        try {
++            transformation = builder.build();
++        } catch (IllegalArgumentException ignored) {
++            return;
++        }
++        transformation.apply(levelNode);
++    }
++
++    @Override
++    public LevelConfigurations createWorldConfig(final ContextMap contextMap) {
++        final String levelName = contextMap.require(WORLD_NAME);
++        try {
++            return super.createWorldConfig(contextMap);
++        } catch (IOException exception) {
++            throw new RuntimeException(String.format("Could not create Magellan level configuration for %s", levelName), exception);
++        }
++    }
++
++    @Override
++    protected boolean isConfigType(Type type) {
++        return ConfigurationPart.class.isAssignableFrom(erase(type));
++    }
++
++    @Override
++    protected int getWorldConfigurationCurrentVersion() {
++        return LevelConfigurations.CURRENT_VERSION;
++    }
++
++    @VisibleForTesting
++    static ConfigurationNode createForTesting() {
++        ObjectMapper.Factory factory = defaultGlobalFactoryBuilder(ObjectMapper.factoryBuilder()).build();
++        ConfigurationOptions options = defaultGlobalOptions(defaultOptions(ConfigurationOptions.defaults()))
++                .serializers(builder -> builder.register(type -> ConfigurationPart.class.isAssignableFrom(erase(type)), factory.asTypeSerializer()));
++        return BasicConfigurationNode.root(options);
++    }
++
++    public static MagellanConfigurations setup(final Path legacyConfigurations, final Path configurationDir) throws Exception {
++        final Path legacy = Files.isSymbolicLink(legacyConfigurations) ? Files.readSymbolicLink(legacyConfigurations) : legacyConfigurations;
++        final Path replacementFile = legacy.resolveSibling(legacyConfigurations.getFileName() + "-README.txt");
++
++        if (Files.exists(legacyConfigurations) && Files.notExists(replacementFile)) {
++            Path path = configurationDir.toAbsolutePath();
++            Files.createFile(replacementFile);
++            Files.writeString(replacementFile, String.format(MOVED_NOTICE, path, path));
++        }
++
++        try {
++            PaperConfigurations.createDirectoriesSymlinkAware(configurationDir);
++            return new MagellanConfigurations(configurationDir);
++        } catch (final IOException e) {
++            throw new RuntimeException("Could not setup Magellan configuration files", e);
++        }
++    }
++
++    public void reloadConfigurations(MinecraftServer server) {
++        try {
++            this.initializeGlobalConfiguration(reloader(this.globalConfigClass, GlobalConfiguration.get()));
++            this.initializeWorldDefaultsConfiguration();
++            for (ServerLevel level : server.getAllLevels())
++                this.createWorldConfig(PaperConfigurations.createWorldContextMap(level), reloader(this.worldConfigClass, level.magellanLevelConfiguration()));
++        } catch (Exception e) {
++            throw new RuntimeException("Could not reload Magellan configuration files", e);
++        }
++    }
++}
+diff --git a/src/main/java/team/earendel/magellan/configurations/RemovedConfigurations.java b/src/main/java/team/earendel/magellan/configurations/RemovedConfigurations.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..656ffd46f191432fd9cc5a0702254d28bcfa15cc
+--- /dev/null
++++ b/src/main/java/team/earendel/magellan/configurations/RemovedConfigurations.java
+@@ -0,0 +1,10 @@
++package team.earendel.magellan.configurations;
++
++import org.spongepowered.configurate.NodePath;
++
++interface RemovedConfigurations {
++
++    NodePath[] REMOVED_GLOBAL_PATHS = {};
++    NodePath[] REMOVED_LEVEL_PATHS = {};
++
++}
