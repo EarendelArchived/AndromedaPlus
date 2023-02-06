@@ -1,0 +1,721 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: AlphaKR93 <alphakr93@gmail.com>
+Date: Mon, 6 Feb 2023 17:53:42 +0900
+Subject: [PATCH] Implement SecureSeed
+
+
+diff --git a/src/main/java/net/minecraft/server/commands/SeedCommand.java b/src/main/java/net/minecraft/server/commands/SeedCommand.java
+index 9ca33c07a261316febdb0bd67cd716848064878e..114e364d9b0b8df6e13b4a77304ef6e648a8fe52 100644
+--- a/src/main/java/net/minecraft/server/commands/SeedCommand.java
++++ b/src/main/java/net/minecraft/server/commands/SeedCommand.java
+@@ -12,8 +12,21 @@ public class SeedCommand {
+             return !dedicated || source.hasPermission(2);
+         }).executes((context) -> {
+             long l = context.getSource().getLevel().getSeed();
+-            Component component = ComponentUtils.copyOnClickText(String.valueOf(l));
+-            context.getSource().sendSuccess(Component.translatable("commands.seed.success", component), false);
++            // AndromedaPlus start
++            team.earendel.andromedaplus.secureseed.Globals.setupGlobals(context.getSource().getLevel());
++            String seedStr = team.earendel.andromedaplus.secureseed.Globals.seedToString(team.earendel.andromedaplus.secureseed.Globals.worldSeed);
++
++            Component seedComponent = ComponentUtils.wrapInSquareBrackets(Component.literal(String.valueOf(l)).withStyle((style) -> {
++                return style.withColor(net.minecraft.ChatFormatting.GREEN).withClickEvent(new net.minecraft.network.chat.ClickEvent(net.minecraft.network.chat.ClickEvent.Action.COPY_TO_CLIPBOARD, String.valueOf(l))).withHoverEvent(new net.minecraft.network.chat.HoverEvent(net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT, Component.translatable("chat.copy.click"))).withInsertion(String.valueOf(l));
++            }));
++
++            Component featureSeedComponent = ComponentUtils.wrapInSquareBrackets(Component.translatable("chat.copy.click").withStyle((style) -> {
++                return style.withColor(net.minecraft.ChatFormatting.GREEN).withClickEvent(new net.minecraft.network.chat.ClickEvent(net.minecraft.network.chat.ClickEvent.Action.COPY_TO_CLIPBOARD, seedStr)).withHoverEvent(new net.minecraft.network.chat.HoverEvent(net.minecraft.network.chat.HoverEvent.Action.SHOW_TEXT, Component.translatable("chat.copy.click"))).withInsertion(seedStr);
++            }));
++
++            context.getSource().sendSuccess(Component.translatable("commands.seed.success", seedComponent), false);
++            context.getSource().sendSuccess(Component.translatable("Feature seed: %s", featureSeedComponent), false);
++            // AndromedaPlus end
+             return (int)l;
+         }));
+     }
+diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServerProperties.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServerProperties.java
+index 60f95e607cc6d4020bfb3b08393d333f697fa169..0f819174b59822971f79fb1c16ccd560956296ca 100644
+--- a/src/main/java/net/minecraft/server/dedicated/DedicatedServerProperties.java
++++ b/src/main/java/net/minecraft/server/dedicated/DedicatedServerProperties.java
+@@ -159,8 +159,13 @@ public class DedicatedServerProperties extends Settings<DedicatedServerPropertie
+         String s = this.get("level-seed", "");
+         boolean flag = this.get("generate-structures", true);
+         long i = WorldOptions.parseSeed(s).orElse(WorldOptions.randomSeed());
+-
+-        this.worldOptions = new WorldOptions(i, flag, false);
++        // AndromedaPlus start
++        String featureSeedString = this.get("feature-seed", "");
++        long[] featureSeed;
++        if (featureSeedString.isEmpty()) featureSeed = team.earendel.andromedaplus.secureseed.Globals.createRandomWorldSeed();
++        else featureSeed = team.earendel.andromedaplus.secureseed.Globals.parseSeed(featureSeedString).orElseGet(team.earendel.andromedaplus.secureseed.Globals::createRandomWorldSeed);
++        this.worldOptions = new WorldOptions(i, featureSeed, flag, false);
++        // AndromedaPlus end
+         this.worldDimensionData = new DedicatedServerProperties.WorldDimensionData((JsonObject) this.get("generator-settings", (s1) -> {
+             return GsonHelper.parse(!s1.isEmpty() ? s1 : "{}");
+         }, new JsonObject()), (String) this.get("level-type", (s1) -> {
+diff --git a/src/main/java/net/minecraft/server/level/ServerChunkCache.java b/src/main/java/net/minecraft/server/level/ServerChunkCache.java
+index 0ae45cf5a084fd412305e8b2f5dabe608b4eb1c1..01a55486799e563ed7c59b87c6b59a045b0f4e93 100644
+--- a/src/main/java/net/minecraft/server/level/ServerChunkCache.java
++++ b/src/main/java/net/minecraft/server/level/ServerChunkCache.java
+@@ -886,6 +886,7 @@ public class ServerChunkCache extends ChunkSource {
+     }
+ 
+     public ChunkGenerator getGenerator() {
++        team.earendel.andromedaplus.secureseed.Globals.setupGlobals(level); // AndromedaPlus
+         return this.chunkMap.generator();
+     }
+ 
+diff --git a/src/main/java/net/minecraft/server/level/ServerLevel.java b/src/main/java/net/minecraft/server/level/ServerLevel.java
+index 3d0f8578eb31d3e718df9641033641c93b360570..072ee66156e577f75dec5232c72aceb27795bd35 100644
+--- a/src/main/java/net/minecraft/server/level/ServerLevel.java
++++ b/src/main/java/net/minecraft/server/level/ServerLevel.java
+@@ -581,6 +581,7 @@ public class ServerLevel extends Level implements WorldGenLevel {
+             chunkgenerator = new org.bukkit.craftbukkit.generator.CustomChunkGenerator(this, chunkgenerator, gen);
+         }
+         // CraftBukkit end
++        team.earendel.andromedaplus.secureseed.Globals.setupGlobals(this); // AndromedaPlus
+         boolean flag2 = minecraftserver.forceSynchronousWrites();
+         DataFixer datafixer = minecraftserver.getFixerUpper();
+         this.entityStorage = new EntityRegionFileStorage(convertable_conversionsession.getDimensionPath(resourcekey).resolve("entities"), flag2); // Paper - rewrite chunk system  //EntityPersistentStorage<Entity> entitypersistentstorage = new EntityStorage(this, convertable_conversionsession.getDimensionPath(resourcekey).resolve("entities"), datafixer, flag2, minecraftserver);
+diff --git a/src/main/java/net/minecraft/world/entity/monster/Slime.java b/src/main/java/net/minecraft/world/entity/monster/Slime.java
+index 360ad0ffd25c5d42d8d50060be40cab304c8fb32..59cd2fc7c1acf31a77ecaaee38bb0c8d8c443ff4 100644
+--- a/src/main/java/net/minecraft/world/entity/monster/Slime.java
++++ b/src/main/java/net/minecraft/world/entity/monster/Slime.java
+@@ -418,7 +418,7 @@ public class Slime extends Mob implements Enemy {
+             }
+ 
+             ChunkPos chunkcoordintpair = new ChunkPos(pos);
+-            boolean flag = world.getMinecraftWorld().paperConfig().entities.spawning.allChunksAreSlimeChunks || WorldgenRandom.seedSlimeChunk(chunkcoordintpair.x, chunkcoordintpair.z, ((WorldGenLevel) world).getSeed(), world.getMinecraftWorld().spigotConfig.slimeSeed).nextInt(10) == 0; // Spigot // Paper
++            boolean flag = world.getMinecraftWorld().paperConfig().entities.spawning.allChunksAreSlimeChunks || world.getChunk(chunkcoordintpair.x, chunkcoordintpair.z).isSlimeChunk(); // Spigot // Paper // AndromedaPlus
+ 
+             // Paper start - Replace rules for Height in Slime Chunks
+             final double maxHeightSlimeChunk = world.getMinecraftWorld().paperConfig().entities.spawning.slimeSpawnHeight.slimeChunk.maximum;
+diff --git a/src/main/java/net/minecraft/world/level/chunk/ChunkAccess.java b/src/main/java/net/minecraft/world/level/chunk/ChunkAccess.java
+index e254b2d04e4fc1dc76c26f61ea38aeb27755143f..703af3249c0f34f9301e13cd3d88eeb272813850 100644
+--- a/src/main/java/net/minecraft/world/level/chunk/ChunkAccess.java
++++ b/src/main/java/net/minecraft/world/level/chunk/ChunkAccess.java
+@@ -77,6 +77,11 @@ public abstract class ChunkAccess implements BlockGetter, BiomeManager.NoiseBiom
+     protected final LevelHeightAccessor levelHeightAccessor;
+     protected final LevelChunkSection[] sections;
+ 
++    // AndromedaPlus start
++    private boolean slimeChunk;
++    private boolean hasComputedSlimeChunk;
++    // AndromedaPlus end
++
+     // CraftBukkit start - SPIGOT-6814: move to IChunkAccess to account for 1.17 to 1.18 chunk upgrading.
+     private static final org.bukkit.craftbukkit.persistence.CraftPersistentDataTypeRegistry DATA_TYPE_REGISTRY = new org.bukkit.craftbukkit.persistence.CraftPersistentDataTypeRegistry();
+     public org.bukkit.craftbukkit.persistence.DirtyCraftPersistentDataContainer persistentDataContainer = new org.bukkit.craftbukkit.persistence.DirtyCraftPersistentDataContainer(ChunkAccess.DATA_TYPE_REGISTRY);
+@@ -162,6 +167,16 @@ public abstract class ChunkAccess implements BlockGetter, BiomeManager.NoiseBiom
+         return GameEventListenerRegistry.NOOP;
+     }
+ 
++    // AndromedaPlus start
++    public boolean isSlimeChunk() {
++        if (!hasComputedSlimeChunk) {
++            hasComputedSlimeChunk = true;
++            slimeChunk = team.earendel.andromedaplus.secureseed.WorldgenCryptoRandom.seedSlimeChunk(chunkPos.x, chunkPos.z).nextInt(10) == 0;
++        }
++        return slimeChunk;
++    }
++    // AndromedaPlus end
++
+     public abstract BlockState getBlockState(final int x, final int y, final int z); // Paper
+     @Nullable
+     public abstract BlockState setBlockState(BlockPos pos, BlockState state, boolean moved);
+diff --git a/src/main/java/net/minecraft/world/level/chunk/ChunkGenerator.java b/src/main/java/net/minecraft/world/level/chunk/ChunkGenerator.java
+index 7e9c388179c75a233d9b179ea1e00428ac65ee99..96a7d2d9fc879d31ec116f842df49213da73440b 100644
+--- a/src/main/java/net/minecraft/world/level/chunk/ChunkGenerator.java
++++ b/src/main/java/net/minecraft/world/level/chunk/ChunkGenerator.java
+@@ -338,7 +338,7 @@ public abstract class ChunkGenerator {
+                 return structure.step().ordinal();
+             }));
+             List<FeatureSorter.StepFeatureData> list = (List) this.featuresPerStep.get();
+-            WorldgenRandom seededrandom = new WorldgenRandom(new XoroshiroRandomSource(RandomSupport.generateUniqueSeed()));
++            WorldgenRandom seededrandom = new team.earendel.andromedaplus.secureseed.WorldgenCryptoRandom(blockposition.getX(), blockposition.getZ(), team.earendel.andromedaplus.secureseed.Globals.Salt.UNDEFINED, 0); // AndromedaPlus
+             long i = seededrandom.setDecorationSeed(generatoraccessseed.getSeed(), blockposition.getX(), blockposition.getZ());
+             Set<Holder<Biome>> set = new ObjectArraySet();
+ 
+@@ -577,7 +577,7 @@ public abstract class ChunkGenerator {
+                     ArrayList<StructureSet.StructureSelectionEntry> arraylist = new ArrayList(list.size());
+ 
+                     arraylist.addAll(list);
+-                    WorldgenRandom seededrandom = new WorldgenRandom(new LegacyRandomSource(0L));
++                    WorldgenRandom seededrandom = new team.earendel.andromedaplus.secureseed.WorldgenCryptoRandom(chunkcoordintpair.x, chunkcoordintpair.z, team.earendel.andromedaplus.secureseed.Globals.Salt.GENERATE_FEATURE, 0); // AndromedaPlus
+ 
+                     seededrandom.setLargeFeatureSeed(placementCalculator.getLevelSeed(), chunkcoordintpair.x, chunkcoordintpair.z);
+                     int i = 0;
+diff --git a/src/main/java/net/minecraft/world/level/chunk/ChunkGeneratorStructureState.java b/src/main/java/net/minecraft/world/level/chunk/ChunkGeneratorStructureState.java
+index 51a05900d02dc116ea215730713cd2cf2a4f1c23..54e37a709c96cfbf953bc5e36574e651645ac39a 100644
+--- a/src/main/java/net/minecraft/world/level/chunk/ChunkGeneratorStructureState.java
++++ b/src/main/java/net/minecraft/world/level/chunk/ChunkGeneratorStructureState.java
+@@ -218,15 +218,7 @@ public class ChunkGeneratorStructureState {
+             List<CompletableFuture<ChunkPos>> list = new ArrayList(j);
+             int k = placement.spread();
+             HolderSet<Biome> holderset = placement.preferredBiomes();
+-            RandomSource randomsource = RandomSource.create();
+-
+-            // Paper start
+-            if (this.conf.strongholdSeed != null && structureSetEntry.is(net.minecraft.world.level.levelgen.structure.BuiltinStructureSets.STRONGHOLDS)) {
+-                randomsource.setSeed(this.conf.strongholdSeed);
+-            } else {
+-            // Paper end
+-            randomsource.setSeed(this.concentricRingsSeed);
+-            } // Paper
++            RandomSource randomsource = new team.earendel.andromedaplus.secureseed.WorldgenCryptoRandom(0, 0, team.earendel.andromedaplus.secureseed.Globals.Salt.STRONGHOLDS, 0); // AndromedaPlus
+             double d0 = randomsource.nextDouble() * 3.141592653589793D * 2.0D;
+             int l = 0;
+             int i1 = 0;
+diff --git a/src/main/java/net/minecraft/world/level/chunk/ChunkStatus.java b/src/main/java/net/minecraft/world/level/chunk/ChunkStatus.java
+index 3b91ee283601ba5fcca111b4dd2ed2b50bcb51aa..884c55fe5e09c70b7846f95087a4bd8f9a3fa831 100644
+--- a/src/main/java/net/minecraft/world/level/chunk/ChunkStatus.java
++++ b/src/main/java/net/minecraft/world/level/chunk/ChunkStatus.java
+@@ -300,6 +300,7 @@ public class ChunkStatus {
+     }
+ 
+     public CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> generate(Executor executor, ServerLevel world, ChunkGenerator generator, StructureTemplateManager structureTemplateManager, ThreadedLevelLightEngine lightingProvider, Function<ChunkAccess, CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> fullChunkConverter, List<ChunkAccess> chunks, boolean regenerate) {
++        team.earendel.andromedaplus.secureseed.Globals.setupGlobals(world); // AndromedaPlus
+         ChunkAccess ichunkaccess = (ChunkAccess) chunks.get(chunks.size() / 2);
+         ProfiledDuration profiledduration = JvmProfiler.INSTANCE.onChunkGenerate(ichunkaccess.getPos(), world.dimension(), this.name);
+         CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> completablefuture = this.generationTask.doWork(this, executor, world, generator, structureTemplateManager, lightingProvider, fullChunkConverter, chunks, ichunkaccess, regenerate);
+diff --git a/src/main/java/net/minecraft/world/level/levelgen/WorldOptions.java b/src/main/java/net/minecraft/world/level/levelgen/WorldOptions.java
+index d38cabc9eeb45dd863e5f87b7df3b6327ea6a4a2..6381841d4a3164df2a7a564c3c27ceb146ddc87e 100644
+--- a/src/main/java/net/minecraft/world/level/levelgen/WorldOptions.java
++++ b/src/main/java/net/minecraft/world/level/levelgen/WorldOptions.java
+@@ -5,31 +5,42 @@ import com.mojang.serialization.MapCodec;
+ import com.mojang.serialization.codecs.RecordCodecBuilder;
+ import java.util.Optional;
+ import java.util.OptionalLong;
++
+ import net.minecraft.util.RandomSource;
+ import org.apache.commons.lang3.StringUtils;
+ 
+ public class WorldOptions {
+     public static final MapCodec<WorldOptions> CODEC = RecordCodecBuilder.mapCodec((instance) -> {
+-        return instance.group(Codec.LONG.fieldOf("seed").stable().forGetter(WorldOptions::seed), Codec.BOOL.fieldOf("generate_features").orElse(true).stable().forGetter(WorldOptions::generateStructures), Codec.BOOL.fieldOf("bonus_chest").orElse(false).stable().forGetter(WorldOptions::generateBonusChest), Codec.STRING.optionalFieldOf("legacy_custom_options").stable().forGetter((generatorOptions) -> {
++        return instance.group(Codec.LONG.fieldOf("seed").stable().forGetter(WorldOptions::seed), Codec.LONG_STREAM.fieldOf("feature_seed").stable().forGetter(WorldOptions::featureSeedStream), Codec.BOOL.fieldOf("generate_features").orElse(true).stable().forGetter(WorldOptions::generateStructures), Codec.BOOL.fieldOf("bonus_chest").orElse(false).stable().forGetter(WorldOptions::generateBonusChest), Codec.STRING.optionalFieldOf("legacy_custom_options").stable().forGetter((generatorOptions) -> { // AndromedaPlus
+             return generatorOptions.legacyCustomOptions;
+         })).apply(instance, instance.stable(WorldOptions::new));
+     });
+-    public static final WorldOptions DEMO_OPTIONS = new WorldOptions((long)"North Carolina".hashCode(), true, true);
++    public static final WorldOptions DEMO_OPTIONS = new WorldOptions((long)"North Carolina".hashCode(), team.earendel.andromedaplus.secureseed.Globals.createRandomWorldSeed(), true, true); // AndromedaPlus
+     private final long seed;
++    private final long[] featureSeed; // AndromedaPlus
+     private final boolean generateStructures;
+     private final boolean generateBonusChest;
+     private final Optional<String> legacyCustomOptions;
+ 
+-    public WorldOptions(long seed, boolean generateStructures, boolean bonusChest) {
+-        this(seed, generateStructures, bonusChest, Optional.empty());
++    // AndromedaPlus start
++    public WorldOptions(long seed, long[] featureSeed, boolean generateStructures, boolean bonusChest) {
++        this(seed, featureSeed, generateStructures, bonusChest, Optional.empty());
+     }
++    // AndromedaPlus end
+ 
+     public static WorldOptions defaultWithRandomSeed() {
+-        return new WorldOptions(randomSeed(), true, false);
++    // AndromedaPlus start
++        return new WorldOptions(randomSeed(), team.earendel.andromedaplus.secureseed.Globals.createRandomWorldSeed(), true, false);
++    }
++
++    private WorldOptions(long seed, java.util.stream.LongStream featureSeed, boolean generateStructures, boolean bonusChest, Optional<String> legacyCustomOptions) {
++        this(seed, featureSeed.toArray(), generateStructures, bonusChest, legacyCustomOptions);
+     }
+ 
+-    private WorldOptions(long seed, boolean generateStructures, boolean bonusChest, Optional<String> legacyCustomOptions) {
++    private WorldOptions(long seed, long[] featureSeed, boolean generateStructures, boolean bonusChest, Optional<String> legacyCustomOptions) {
++    // AndromedaPlus end
+         this.seed = seed;
++        this.featureSeed = featureSeed; // AndromedaPlus
+         this.generateStructures = generateStructures;
+         this.generateBonusChest = bonusChest;
+         this.legacyCustomOptions = legacyCustomOptions;
+@@ -39,6 +50,16 @@ public class WorldOptions {
+         return this.seed;
+     }
+ 
++    // AndromedaPlus start
++    public long[] featureSeed() {
++        return this.featureSeed;
++    }
++
++    public java.util.stream.LongStream featureSeedStream() {
++        return java.util.stream.LongStream.of(this.featureSeed);
++    }
++    // AndromedaPlus end
++
+     public boolean generateStructures() {
+         return this.generateStructures;
+     }
+@@ -52,15 +73,15 @@ public class WorldOptions {
+     }
+ 
+     public WorldOptions withBonusChest(boolean bonusChest) {
+-        return new WorldOptions(this.seed, this.generateStructures, bonusChest, this.legacyCustomOptions);
++        return new WorldOptions(this.seed, this.featureSeed, this.generateStructures, bonusChest, this.legacyCustomOptions); // AndromedaPlus
+     }
+ 
+     public WorldOptions withStructures(boolean structures) {
+-        return new WorldOptions(this.seed, structures, this.generateBonusChest, this.legacyCustomOptions);
++        return new WorldOptions(this.seed, this.featureSeed, structures, this.generateBonusChest, this.legacyCustomOptions); // AndromedaPlus
+     }
+ 
+     public WorldOptions withSeed(OptionalLong seed) {
+-        return new WorldOptions(seed.orElse(randomSeed()), this.generateStructures, this.generateBonusChest, this.legacyCustomOptions);
++        return new WorldOptions(seed.orElse(randomSeed()), team.earendel.andromedaplus.secureseed.Globals.createRandomWorldSeed(), this.generateStructures, this.generateBonusChest, this.legacyCustomOptions); // AndromedaPlus
+     }
+ 
+     public static OptionalLong parseSeed(String seed) {
+diff --git a/src/main/java/net/minecraft/world/level/levelgen/feature/GeodeFeature.java b/src/main/java/net/minecraft/world/level/levelgen/feature/GeodeFeature.java
+index 512942f75552b0b068e9eebcee55ee9d0ac6e5d7..035bfa5e093af5b5f1bc650b7e7583c239e3f2db 100644
+--- a/src/main/java/net/minecraft/world/level/levelgen/feature/GeodeFeature.java
++++ b/src/main/java/net/minecraft/world/level/levelgen/feature/GeodeFeature.java
+@@ -42,7 +42,7 @@ public class GeodeFeature extends Feature<GeodeConfiguration> {
+         int j = geodeConfiguration.maxGenOffset;
+         List<Pair<BlockPos, Integer>> list = Lists.newLinkedList();
+         int k = geodeConfiguration.distributionPoints.sample(randomSource);
+-        WorldgenRandom worldgenRandom = new WorldgenRandom(new LegacyRandomSource(worldGenLevel.getSeed()));
++        WorldgenRandom worldgenRandom = new team.earendel.andromedaplus.secureseed.WorldgenCryptoRandom(0, 0, team.earendel.andromedaplus.secureseed.Globals.Salt.GEODE_FEATURE, 0); // AndromedaPlus
+         NormalNoise normalNoise = NormalNoise.create(worldgenRandom, -4, 1.0D);
+         List<BlockPos> list2 = Lists.newLinkedList();
+         double d = (double)k / (double)geodeConfiguration.outerWallDistance.getMaxValue();
+diff --git a/src/main/java/net/minecraft/world/level/levelgen/structure/Structure.java b/src/main/java/net/minecraft/world/level/levelgen/structure/Structure.java
+index 92730afcda6f779d0c440c7a8d50bb792b57d2d3..7ee00b6c45101b0be462ca6ba4477f5498329f89 100644
+--- a/src/main/java/net/minecraft/world/level/levelgen/structure/Structure.java
++++ b/src/main/java/net/minecraft/world/level/levelgen/structure/Structure.java
+@@ -165,9 +165,7 @@ public abstract class Structure {
+         }
+ 
+         private static WorldgenRandom makeRandom(long seed, ChunkPos chunkPos) {
+-            WorldgenRandom worldgenRandom = new WorldgenRandom(new LegacyRandomSource(0L));
+-            worldgenRandom.setLargeFeatureSeed(seed, chunkPos.x, chunkPos.z);
+-            return worldgenRandom;
++            return new team.earendel.andromedaplus.secureseed.WorldgenCryptoRandom(chunkPos.x, chunkPos.z, team.earendel.andromedaplus.secureseed.Globals.Salt.GENERATE_FEATURE, seed); // AndromedaPlus
+         }
+     }
+ 
+diff --git a/src/main/java/net/minecraft/world/level/levelgen/structure/placement/RandomSpreadStructurePlacement.java b/src/main/java/net/minecraft/world/level/levelgen/structure/placement/RandomSpreadStructurePlacement.java
+index f2549229682861b08b5671eb73d25fb1a510b7b1..a88275838225bc1b7471f392314cf6410067b8d1 100644
+--- a/src/main/java/net/minecraft/world/level/levelgen/structure/placement/RandomSpreadStructurePlacement.java
++++ b/src/main/java/net/minecraft/world/level/levelgen/structure/placement/RandomSpreadStructurePlacement.java
+@@ -46,8 +46,7 @@ public class RandomSpreadStructurePlacement extends StructurePlacement {
+     public ChunkPos getPotentialStructureChunk(long seed, int chunkX, int chunkZ) {
+         int i = Math.floorDiv(chunkX, this.spacing);
+         int j = Math.floorDiv(chunkZ, this.spacing);
+-        WorldgenRandom worldgenRandom = new WorldgenRandom(new LegacyRandomSource(0L));
+-        worldgenRandom.setLargeFeatureWithSalt(seed, i, j, this.salt());
++        WorldgenRandom worldgenRandom = new team.earendel.andromedaplus.secureseed.WorldgenCryptoRandom(i, j, team.earendel.andromedaplus.secureseed.Globals.Salt.POTENTIONAL_FEATURE, this.salt); // AndromedaPlus
+         int k = this.spacing - this.separation;
+         int l = this.spreadType.evaluate(worldgenRandom, k);
+         int m = this.spreadType.evaluate(worldgenRandom, k);
+diff --git a/src/main/java/net/minecraft/world/level/levelgen/structure/placement/StructurePlacement.java b/src/main/java/net/minecraft/world/level/levelgen/structure/placement/StructurePlacement.java
+index 594a2dd3b1d4c29c969d1992b8e93795da00e682..ce2f0aaaed3d0508494f422887587f931094e54e 100644
+--- a/src/main/java/net/minecraft/world/level/levelgen/structure/placement/StructurePlacement.java
++++ b/src/main/java/net/minecraft/world/level/levelgen/structure/placement/StructurePlacement.java
+@@ -92,34 +92,24 @@ public abstract class StructurePlacement {
+     public abstract StructurePlacementType<?> type();
+ 
+     private static boolean probabilityReducer(long seed, int salt, int chunkX, int chunkZ, float frequency, @org.jetbrains.annotations.Nullable Integer saltOverride) { // Paper - ignore here
+-        WorldgenRandom worldgenRandom = new WorldgenRandom(new LegacyRandomSource(0L));
+-        worldgenRandom.setLargeFeatureWithSalt(seed, salt, chunkX, chunkZ);
++        WorldgenRandom worldgenRandom = new team.earendel.andromedaplus.secureseed.WorldgenCryptoRandom(chunkX, chunkZ, team.earendel.andromedaplus.secureseed.Globals.Salt.UNDEFINED, salt); // AndromedaPlus
+         return worldgenRandom.nextFloat() < frequency;
+     }
+ 
+     private static boolean legacyProbabilityReducerWithDouble(long seed, int salt, int chunkX, int chunkZ, float frequency, @org.jetbrains.annotations.Nullable Integer saltOverride) { // Paper
+-        WorldgenRandom worldgenRandom = new WorldgenRandom(new LegacyRandomSource(0L));
+-        if (saltOverride == null) { // Paper
+-        worldgenRandom.setLargeFeatureSeed(seed, chunkX, chunkZ);
+-        // Paper start
+-        } else {
+-            worldgenRandom.setLargeFeatureWithSalt(seed, chunkX, chunkZ, saltOverride);
+-        }
+-        // Paper end
++        WorldgenRandom worldgenRandom = new team.earendel.andromedaplus.secureseed.WorldgenCryptoRandom(chunkX, chunkZ, team.earendel.andromedaplus.secureseed.Globals.Salt.MINESHAFT_FEATURE, salt); // AndromedaPlus
+         return worldgenRandom.nextDouble() < (double)frequency;
+     }
+ 
+     private static boolean legacyArbitrarySaltProbabilityReducer(long seed, int salt, int chunkX, int chunkZ, float frequency, @org.jetbrains.annotations.Nullable Integer saltOverride) { // Paper
+-        WorldgenRandom worldgenRandom = new WorldgenRandom(new LegacyRandomSource(0L));
+-        worldgenRandom.setLargeFeatureWithSalt(seed, chunkX, chunkZ, saltOverride != null ? saltOverride : HIGHLY_ARBITRARY_RANDOM_SALT); // Paper
++        WorldgenRandom worldgenRandom = new team.earendel.andromedaplus.secureseed.WorldgenCryptoRandom(chunkX, chunkZ, team.earendel.andromedaplus.secureseed.Globals.Salt.BURIED_TREASURE_FEATURE, salt); // AndromedaPlus
+         return worldgenRandom.nextFloat() < frequency;
+     }
+ 
+     private static boolean legacyPillagerOutpostReducer(long seed, int salt, int chunkX, int chunkZ, float frequency, @org.jetbrains.annotations.Nullable Integer saltOverride) { // Paper - ignore here
+         int i = chunkX >> 4;
+         int j = chunkZ >> 4;
+-        WorldgenRandom worldgenRandom = new WorldgenRandom(new LegacyRandomSource(0L));
+-        worldgenRandom.setSeed((long)(i ^ j << 4) ^ seed);
++        WorldgenRandom worldgenRandom = new team.earendel.andromedaplus.secureseed.WorldgenCryptoRandom(chunkX, chunkZ, team.earendel.andromedaplus.secureseed.Globals.Salt.PILLAGER_OUTPOST_FEATURE, salt); // AndromedaPlus
+         worldgenRandom.nextInt();
+         return worldgenRandom.nextInt((int)(1.0F / frequency)) == 0;
+     }
+diff --git a/src/main/java/net/minecraft/world/level/levelgen/structure/pools/JigsawPlacement.java b/src/main/java/net/minecraft/world/level/levelgen/structure/pools/JigsawPlacement.java
+index 126b834db634a3eb7fe10c2af1093c26699db6c9..8567e3988a70fbd5643322425162474a70163ba8 100644
+--- a/src/main/java/net/minecraft/world/level/levelgen/structure/pools/JigsawPlacement.java
++++ b/src/main/java/net/minecraft/world/level/levelgen/structure/pools/JigsawPlacement.java
+@@ -49,7 +49,7 @@ public class JigsawPlacement {
+         ChunkGenerator chunkGenerator = context.chunkGenerator();
+         StructureTemplateManager structureTemplateManager = context.structureTemplateManager();
+         LevelHeightAccessor levelHeightAccessor = context.heightAccessor();
+-        WorldgenRandom worldgenRandom = context.random();
++        WorldgenRandom worldgenRandom = new team.earendel.andromedaplus.secureseed.WorldgenCryptoRandom(context.chunkPos().x, context.chunkPos().z, team.earendel.andromedaplus.secureseed.Globals.Salt.JIGSAW_PLACEMENT, 0); // AndromedaPlus
+         Registry<StructureTemplatePool> registry = registryAccess.registryOrThrow(Registries.TEMPLATE_POOL);
+         Rotation rotation = Rotation.getRandom(worldgenRandom);
+         StructureTemplatePool structureTemplatePool = structurePool.value();
+@@ -247,18 +247,20 @@ public class JigsawPlacement {
+                                             if (!boundingBox2.isInside(blockInfo.pos.relative(JigsawBlock.getFrontFacing(blockInfo.state)))) {
+                                                 return 0;
+                                             } else {
+-                                                ResourceKey<StructureTemplatePool> resourceKey = readPoolName(blockInfo);
+-                                                Optional<? extends Holder<StructureTemplatePool>> optional = this.pools.getHolder(resourceKey);
+-                                                Optional<Holder<StructureTemplatePool>> optional2 = optional.map((entry) -> {
++                                                // AndromedaPlus start - decompfile fix
++                                                ResourceKey<StructureTemplatePool> resourceKey1 = readPoolName(blockInfo);
++                                                Optional<? extends Holder<StructureTemplatePool>> optional1 = this.pools.getHolder(resourceKey);
++                                                Optional<Holder<StructureTemplatePool>> optional2 = optional1.map((entry) -> {
++                                                // AndromedaPlus end
+                                                     return entry.value().getFallback();
+                                                 });
+-                                                int i = optional.map((entry) -> {
++                                                int i1 = optional1.map((entry) -> {// AndromedaPlus - decompfile fix
+                                                     return entry.value().getMaxSize(this.structureTemplateManager);
+                                                 }).orElse(0);
+-                                                int j = optional2.map((entry) -> {
++                                                int j1 = optional2.map((entry) -> {// AndromedaPlus - decompfile fix
+                                                     return entry.value().getMaxSize(this.structureTemplateManager);
+                                                 }).orElse(0);
+-                                                return Math.max(i, j);
++                                                return Math.max(i1, j1);// AndromedaPlus - decompfile fix
+                                             }
+                                         }).max().orElse(0);
+                                     } else {
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftChunk.java b/src/main/java/org/bukkit/craftbukkit/CraftChunk.java
+index f7e19bb7d2ff8f8aaf061cec16462913d77c10d5..44a009b1754d7e25f0547993baf084a0754fbe45 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftChunk.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftChunk.java
+@@ -208,7 +208,7 @@ public class CraftChunk implements Chunk {
+     @Override
+     public boolean isSlimeChunk() {
+         // 987234911L is deterimined in EntitySlime when seeing if a slime can spawn in a chunk
+-        return this.worldServer.paperConfig().entities.spawning.allChunksAreSlimeChunks || WorldgenRandom.seedSlimeChunk(this.getX(), this.getZ(), this.getWorld().getSeed(), worldServer.spigotConfig.slimeSeed).nextInt(10) == 0; // Paper
++        return this.worldServer.paperConfig().entities.spawning.allChunksAreSlimeChunks || worldServer.getChunk(this.getX(), this.getZ()).isSlimeChunk(); // Paper // AndromedaPlus
+     }
+ 
+     @Override
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+index 71dc8ea1de348751ce3e5d0ca5eba277ce5979fc..a9f1d548728e210b275977e15266dfbaa8f3c8e2 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+@@ -1285,7 +1285,7 @@ public final class CraftServer implements Server {
+             iregistry = pair.getSecond().dimensions();
+         } else {
+             LevelSettings worldsettings;
+-            WorldOptions worldoptions = new WorldOptions(creator.seed(), creator.generateStructures(), false);
++            WorldOptions worldoptions = new WorldOptions(creator.seed(), team.earendel.andromedaplus.secureseed.Globals.createRandomWorldSeed(), creator.generateStructures(), false); // AndromedaPlus
+             WorldDimensions worlddimensions;
+ 
+             DedicatedServerProperties.WorldDimensionData properties = new DedicatedServerProperties.WorldDimensionData(GsonHelper.parse((creator.generatorSettings().isEmpty()) ? "{}" : creator.generatorSettings()), creator.type().name().toLowerCase(Locale.ROOT));
+diff --git a/src/main/java/team/earendel/andromedaplus/secureseed/Globals.java b/src/main/java/team/earendel/andromedaplus/secureseed/Globals.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..0e4a320b7ab1c3953925cf5dce70ddd937dd2183
+--- /dev/null
++++ b/src/main/java/team/earendel/andromedaplus/secureseed/Globals.java
+@@ -0,0 +1,79 @@
++package team.earendel.andromedaplus.secureseed;
++
++import com.google.common.collect.Iterables;
++import net.minecraft.server.level.ServerLevel;
++
++import java.math.BigInteger;
++import java.security.SecureRandom;
++import java.util.Optional;
++
++public class Globals {
++    static final long[] EMPTY_WORLD_SEED = new long[16];
++    public static final long[] worldSeed = EMPTY_WORLD_SEED;
++    static final ThreadLocal<Integer> dimension = ThreadLocal.withInitial(() -> 0);
++
++    public enum Salt {
++        UNDEFINED,
++        BASTION_FEATURE,
++        WOODLAND_MANSION_FEATURE,
++        MINESHAFT_FEATURE,
++        BURIED_TREASURE_FEATURE,
++        NETHER_FORTRESS_FEATURE,
++        PILLAGER_OUTPOST_FEATURE,
++        GEODE_FEATURE,
++        NETHER_FOSSIL_FEATURE,
++        OCEAN_MONUMENT_FEATURE,
++        RUINED_PORTAL_FEATURE,
++        POTENTIONAL_FEATURE,
++        GENERATE_FEATURE,
++        JIGSAW_PLACEMENT,
++        STRONGHOLDS,
++        POPULATION,
++        DECORATION,
++        SLIME_CHUNK
++    }
++
++    public static void setupGlobals(ServerLevel world) {
++        System.arraycopy(world.getServer().getWorldData().worldGenOptions().featureSeed(), 0, worldSeed, 0, 16);
++        int worldIndex = Iterables.indexOf(world.getServer().levelKeys(), it -> it == world.dimension());
++        if (worldIndex == -1) worldIndex = world.getServer().levelKeys().size();
++        dimension.set(worldIndex);
++    }
++
++    public static long[] createRandomWorldSeed() {
++        long[] seed = EMPTY_WORLD_SEED;
++        SecureRandom random = new SecureRandom();
++        for (int i = 0; i < 16; i++)
++            seed[i] = random.nextLong();
++        return seed;
++    }
++
++    public static Optional<long[]> parseSeed(String seedString) {
++        if (seedString.isEmpty()) return Optional.empty();
++
++        try {
++            long[] seed = EMPTY_WORLD_SEED;
++            BigInteger seedBigInt = new BigInteger(seedString);
++            if (seedBigInt.signum() < 0)
++                seedBigInt = seedBigInt.and(BigInteger.ONE.shiftLeft(1024).subtract(BigInteger.ONE));
++            for (int i = 0; i < 16; i++) {
++                BigInteger[] divRem = seedBigInt.divideAndRemainder(BigInteger.ONE.shiftLeft(64));
++                seed[i] = divRem[1].longValue();
++                seedBigInt = divRem[0];
++            }
++            return Optional.of(seed);
++        } catch (NumberFormatException ignored) {
++            return Optional.empty();
++        }
++    }
++
++    public static String seedToString(long[] seed) {
++        BigInteger seedBigInt = BigInteger.ZERO;
++        for (int i = 15; i >= 0; i--) {
++            BigInteger value = BigInteger.valueOf(seed[i]);
++            if (value.signum() < 0) value = value.add(BigInteger.ONE.shiftLeft(64));
++            seedBigInt = seedBigInt.shiftLeft(64).add(value);
++        }
++        return seedBigInt.toString();
++    }
++}
+diff --git a/src/main/java/team/earendel/andromedaplus/secureseed/Hashing.java b/src/main/java/team/earendel/andromedaplus/secureseed/Hashing.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..42a4aca51815ddd52caa45b0e3d646a6cdc5c034
+--- /dev/null
++++ b/src/main/java/team/earendel/andromedaplus/secureseed/Hashing.java
+@@ -0,0 +1,69 @@
++package team.earendel.andromedaplus.secureseed;
++
++public class Hashing {
++    private final static long[] blake2b_IV = {
++            0x6a09e667f3bcc908L, 0xbb67ae8584caa73bL, 0x3c6ef372fe94f82bL,
++            0xa54ff53a5f1d36f1L, 0x510e527fade682d1L, 0x9b05688c2b3e6c1fL,
++            0x1f83d9abfb41bd6bL, 0x5be0cd19137e2179L
++    };
++    private final static byte[][] blake2b_sigma = {
++            {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15},
++            {14, 10, 4, 8, 9, 15, 13, 6, 1, 12, 0, 2, 11, 7, 5, 3},
++            {11, 8, 12, 0, 5, 2, 15, 13, 10, 14, 3, 6, 7, 1, 9, 4},
++            {7, 9, 3, 1, 13, 12, 11, 14, 2, 6, 5, 10, 4, 0, 15, 8},
++            {9, 0, 5, 7, 2, 4, 10, 15, 14, 1, 11, 12, 6, 8, 3, 13},
++            {2, 12, 6, 10, 0, 11, 8, 3, 4, 13, 7, 5, 15, 14, 1, 9},
++            {12, 5, 1, 15, 14, 13, 4, 10, 0, 7, 6, 3, 9, 2, 8, 11},
++            {13, 11, 7, 14, 12, 1, 3, 9, 5, 0, 15, 4, 8, 6, 2, 10},
++            {6, 15, 14, 9, 11, 3, 0, 8, 12, 2, 13, 7, 1, 4, 10, 5},
++            {10, 2, 8, 4, 7, 6, 1, 5, 15, 11, 9, 14, 3, 12, 13, 0},
++            {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15},
++            {14, 10, 4, 8, 9, 15, 13, 6, 1, 12, 0, 2, 11, 7, 5, 3}
++    };
++
++    private static void calculate(long x, long y, int posA, int posB, int posC, int posD, long[] internalState) {
++        internalState[posA] += internalState[posB] + x;
++        internalState[posD] = Long.rotateRight(internalState[posD] ^ internalState[posA], 32);
++        internalState[posC] += internalState[posD];
++        internalState[posB] = Long.rotateRight(internalState[posB] ^ internalState[posC], 24);
++        internalState[posA] += internalState[posB] + y;
++        internalState[posD] = Long.rotateRight(internalState[posD] ^ internalState[posA], 16);
++        internalState[posC] += internalState[posD];
++        internalState[posB] = Long.rotateRight(internalState[posB] ^ internalState[posC], 63);
++    }
++
++    public static void hash(long[] message, long[] chainValue, long[] internalState, long messageOffset, boolean isFinal) {
++        assert message.length == 16;
++        assert chainValue.length == 8;
++        assert internalState.length == 16;
++
++        System.arraycopy(chainValue, 0, internalState, 0, 8);
++        System.arraycopy(blake2b_IV, 0, internalState, 8, 4);
++
++        internalState[12] = messageOffset ^ blake2b_IV[4];
++        internalState[13] = blake2b_IV[5];
++        if (isFinal) internalState[14] = ~blake2b_IV[6];
++        internalState[15] = blake2b_IV[7];
++
++        for (int i = 0; i < 12; i++) {
++            calculate(message[blake2b_sigma[i][0]], message[blake2b_sigma[i][1]], 0, 4, 8, 12, internalState);
++            calculate(message[blake2b_sigma[i][2]], message[blake2b_sigma[i][3]], 1, 5, 9, 13, internalState);
++            calculate(message[blake2b_sigma[i][4]], message[blake2b_sigma[i][5]], 2, 6, 10, 14, internalState);
++            calculate(message[blake2b_sigma[i][6]], message[blake2b_sigma[i][7]], 3, 7, 11, 15, internalState);
++            calculate(message[blake2b_sigma[i][8]], message[blake2b_sigma[i][9]], 0, 5, 10, 15, internalState);
++            calculate(message[blake2b_sigma[i][10]], message[blake2b_sigma[i][11]], 1, 6, 11, 12, internalState);
++            calculate(message[blake2b_sigma[i][12]], message[blake2b_sigma[i][13]], 2, 7, 8, 13, internalState);
++            calculate(message[blake2b_sigma[i][14]], message[blake2b_sigma[i][15]], 3, 4, 9, 14, internalState);
++        }
++
++        for (int i = 0; i < 8; i ++)
++            chainValue[i] ^= internalState[i] ^ internalState[i + 8];
++    }
++
++    static long[] hashWorldSeed(long[] worldSeed) {
++        long[] result = blake2b_IV.clone();
++        result[0] ^= 0x01010040;
++        hash(worldSeed, result, Globals.EMPTY_WORLD_SEED, 0, false);
++        return result;
++    }
++}
+diff --git a/src/main/java/team/earendel/andromedaplus/secureseed/WorldgenCryptoRandom.java b/src/main/java/team/earendel/andromedaplus/secureseed/WorldgenCryptoRandom.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..54a8fa5d76f822eccfc29f172a25a5016912f6d8
+--- /dev/null
++++ b/src/main/java/team/earendel/andromedaplus/secureseed/WorldgenCryptoRandom.java
+@@ -0,0 +1,136 @@
++package team.earendel.andromedaplus.secureseed;
++
++import net.minecraft.util.Mth;
++import net.minecraft.util.RandomSource;
++import net.minecraft.world.level.levelgen.LegacyRandomSource;
++import net.minecraft.world.level.levelgen.WorldgenRandom;
++import org.jetbrains.annotations.NotNull;
++
++import java.util.Arrays;
++
++public class WorldgenCryptoRandom extends WorldgenRandom {
++    private static final ThreadLocal<long[]> LAST_SEED_WORLD_SEED = ThreadLocal.withInitial(() -> Globals.EMPTY_WORLD_SEED);
++    private static final ThreadLocal<long[]> HASHED_WORLD_SEED = ThreadLocal.withInitial(() -> Hashing.hashWorldSeed(Globals.EMPTY_WORLD_SEED));
++
++    private final long[] worldSeed = Globals.EMPTY_WORLD_SEED;
++    private final long[] message = Globals.EMPTY_WORLD_SEED;
++    private final long[] cachedInternalState = Globals.EMPTY_WORLD_SEED;
++    private final long[] randomBits = new long[8];
++    private int randomBitIndex;
++    private long counter;
++
++    public WorldgenCryptoRandom(int x, int z, Globals.Salt typeSalt, long salt) {
++        super(new LegacyRandomSource(0L));
++        if (typeSalt != null) this.setSecureSeed(x, z, typeSalt, salt);
++    }
++
++    private void setSecureSeed(int x, int z, Globals.Salt typeSalt, long salt) {
++        System.arraycopy(Globals.worldSeed, 0, this.worldSeed, 0, 16);
++        message[0] = ((long) x << 32) | ((long) z & 0xffffffffL);
++        message[1] = ((long) Globals.dimension.get() << 32) | ((long) salt & 0xffffffffL);
++        message[2] = typeSalt.ordinal();
++        message[3] = counter = 0;
++        randomBitIndex = 512;
++    }
++
++    private long[] getHashedWorldSeed() {
++        if (!Arrays.equals(worldSeed, LAST_SEED_WORLD_SEED.get())) {
++            HASHED_WORLD_SEED.set(Hashing.hashWorldSeed(worldSeed));
++            System.arraycopy(worldSeed, 0, LAST_SEED_WORLD_SEED.get(), 0, 16);
++        }
++        return HASHED_WORLD_SEED.get();
++    }
++
++    private void moreRandomBits() {
++        message[3] = counter++;
++        System.arraycopy(getHashedWorldSeed(), 0, randomBits, 0, 8);
++        Hashing.hash(message, randomBits, cachedInternalState, 64, true);
++        randomBitIndex -= 512;
++    }
++
++    private long getBits(int count) {
++        if (randomBitIndex >= 512) moreRandomBits();
++
++        int alignment = randomBitIndex & 63;
++        if ((randomBitIndex >>> 6) == ((randomBitIndex + count) >>> 6)) {
++            long result = (randomBits[randomBitIndex >>> 6] >>> alignment) & ((1L << count) - 1);
++            randomBitIndex += count;
++            return result;
++        } else {
++            long result = (randomBits[randomBitIndex >>> 6] >>> alignment) & ((1L << (64 - alignment)) - 1);
++            randomBitIndex += count;
++            if (randomBitIndex >= 512) moreRandomBits();
++            alignment = randomBitIndex &= 63;
++            result <<= alignment;
++            result |= (randomBits[randomBitIndex >>> 6] & (64 - alignment)) & ((1L << alignment) - 1);
++            return result;
++        }
++    }
++
++    @Override
++    public @NotNull RandomSource fork() {
++        WorldgenCryptoRandom fork = new WorldgenCryptoRandom(0, 0, null, 0);
++        System.arraycopy(Globals.worldSeed, 0, fork.worldSeed, 0, 16);
++
++        fork.message[0] = this.message[0];
++        fork.message[1] = this.message[1];
++        fork.message[2] = this.message[2];
++        fork.message[3] = this.message[3];
++        fork.randomBitIndex = this.randomBitIndex;
++        fork.counter = this.counter;
++        fork.nextLong();
++
++        return fork;
++    }
++
++    @Override
++    public int next(int bits) {
++        return (int) getBits(bits);
++    }
++
++    @Override
++    public void consumeCount(int count) {
++        randomBitIndex += count;
++        if (randomBitIndex >= 1024) {
++            randomBitIndex -= 512;
++            counter += randomBitIndex >>> 9;
++            randomBitIndex &= 511;
++            randomBitIndex += 512;
++        }
++    }
++
++    @Override
++    public int nextInt(int bound) {
++        int bits = Mth.ceillog2(bound);
++        int result;
++        do {
++            result = (int) getBits(bits);
++        } while (result >= bound);
++        return result;
++    }
++
++    @Override
++    public long nextLong() {
++        return getBits(64);
++    }
++
++    @Override
++    public double nextDouble() {
++        return getBits(53) * 0x1.0p-53;
++    }
++
++    @Override
++    public long setDecorationSeed(long worldSeed, int blockX, int blockZ) {
++        setSecureSeed(blockX, blockZ, Globals.Salt.DECORATION, worldSeed);
++        return ((long) blockX << 32) | ((long) blockZ & 0xffffffffL);
++    }
++
++    @Override
++    public void setFeatureSeed(long populationSeed, int index, int step) {
++        setSecureSeed((int) (populationSeed >> 32), (int) populationSeed, Globals.Salt.POPULATION, index + 10000L * step);
++    }
++
++    public static RandomSource seedSlimeChunk(int chunkX, int chunkZ) {
++        return new WorldgenCryptoRandom(chunkX, chunkZ, Globals.Salt.SLIME_CHUNK, 0);
++    }
++}

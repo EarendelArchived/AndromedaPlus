@@ -27,7 +27,7 @@ index 8bcd87d672467629ef092c790cc448b6eb9f4ad9..20deeb38c19569fd824c17176eeaddce
              "Specification-Title" to "Bukkit",
              "Specification-Version" to project.version,
 diff --git a/src/main/java/com/destroystokyo/paper/Metrics.java b/src/main/java/com/destroystokyo/paper/Metrics.java
-index f620c51723a5149ba641a6da743648cf4951cc85..68faa3b446acd8d25dd37aeac4912a5bec271a2e 100644
+index f620c51723a5149ba641a6da743648cf4951cc85..0dec67dde2bd0a5fd25b8c5577ca70ae11629c3a 100644
 --- a/src/main/java/com/destroystokyo/paper/Metrics.java
 +++ b/src/main/java/com/destroystokyo/paper/Metrics.java
 @@ -593,7 +593,7 @@ public class Metrics {
@@ -39,11 +39,12 @@ index f620c51723a5149ba641a6da743648cf4951cc85..68faa3b446acd8d25dd37aeac4912a5b
  
                  metrics.addCustomChart(new Metrics.SimplePie("minecraft_version", () -> {
                      String minecraftVersion = Bukkit.getVersion();
-@@ -603,7 +603,7 @@ public class Metrics {
+@@ -603,7 +603,8 @@ public class Metrics {
  
                  metrics.addCustomChart(new Metrics.SingleLineChart("players", () -> Bukkit.getOnlinePlayers().size()));
                  metrics.addCustomChart(new Metrics.SimplePie("online_mode", () -> Bukkit.getOnlineMode() ? "online" : (io.papermc.paper.configuration.GlobalConfiguration.get().proxies.isProxyOnlineMode() ? "bungee" : "offline"))); // Purpur
 -                metrics.addCustomChart(new Metrics.SimplePie("andromeda_version", () -> (org.bukkit.craftbukkit.Main.class.getPackage().getImplementationVersion() != null) ? org.bukkit.craftbukkit.Main.class.getPackage().getImplementationVersion() : "unknown")); // Purpur // Andromeda
++                metrics.addCustomChart(new Metrics.SimplePie("andromedaplus_type", () -> "Matter")); // AndromedaPlus
 +                metrics.addCustomChart(new Metrics.SimplePie("andromedaplus_version", () -> (org.bukkit.craftbukkit.Main.class.getPackage().getImplementationVersion() != null) ? org.bukkit.craftbukkit.Main.class.getPackage().getImplementationVersion() : "unknown")); // Purpur // Andromeda // AndromedaPlus
  
                  metrics.addCustomChart(new Metrics.DrilldownPie("java_version", () -> {
