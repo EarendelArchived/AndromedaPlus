@@ -226,10 +226,10 @@ index fa4cb108cb615eba80efc903e1a0569c78a85afd..71dc8ea1de348751ce3e5d0ca5eba277
      private final String bukkitVersion = Versioning.getBukkitVersion();
      private final Logger logger = Logger.getLogger("Minecraft");
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftLivingEntity.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftLivingEntity.java
-index ce15e4c479683665e1374523c3e053683b7ab79b..4c9b9040e5793cb78bb0e1fef92880db5b0bbaf4 100644
+index 318ed87752204ec91e37ab3d350c45e096de5e2b..63597893752fac333b9e982354b7c71569ad4b61 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftLivingEntity.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftLivingEntity.java
-@@ -877,7 +877,7 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
+@@ -883,7 +883,7 @@ public class CraftLivingEntity extends CraftEntity implements LivingEntity {
              return EntityCategory.WATER;
          }
  
