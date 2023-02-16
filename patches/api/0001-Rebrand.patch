@@ -5,10 +5,10 @@ Subject: [PATCH] Rebrand
 
 
 diff --git a/build.gradle.kts b/build.gradle.kts
-index 73cf94c26512ac622948e8ec5422beed3ac30bae..4d7218223f5d897760a437ff9e0c8dc8fff96258 100644
+index 066082881a66af7b202e44d09e2d575842cb7a1d..0b644b49adea7758f2e0ea75f9ed682c9a3e53f5 100644
 --- a/build.gradle.kts
 +++ b/build.gradle.kts
-@@ -159,7 +159,7 @@ publishing {
+@@ -160,7 +160,7 @@ publishing {
      repositories {
          maven {
              name = "githubPackage"

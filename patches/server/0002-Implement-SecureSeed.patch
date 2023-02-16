@@ -280,10 +280,10 @@ index 512942f75552b0b068e9eebcee55ee9d0ac6e5d7..035bfa5e093af5b5f1bc650b7e7583c2
          List<BlockPos> list2 = Lists.newLinkedList();
          double d = (double)k / (double)geodeConfiguration.outerWallDistance.getMaxValue();
 diff --git a/src/main/java/net/minecraft/world/level/levelgen/structure/Structure.java b/src/main/java/net/minecraft/world/level/levelgen/structure/Structure.java
-index 92730afcda6f779d0c440c7a8d50bb792b57d2d3..7ee00b6c45101b0be462ca6ba4477f5498329f89 100644
+index 8eaa1a57e904fe7e540b311c6c5c36b755f021fc..9768f984998523f3706cb1e2cdfd2c45544d646e 100644
 --- a/src/main/java/net/minecraft/world/level/levelgen/structure/Structure.java
 +++ b/src/main/java/net/minecraft/world/level/levelgen/structure/Structure.java
-@@ -165,9 +165,7 @@ public abstract class Structure {
+@@ -164,9 +164,7 @@ public abstract class Structure {
          }
  
          private static WorldgenRandom makeRandom(long seed, ChunkPos chunkPos) {
@@ -392,7 +392,7 @@ index 126b834db634a3eb7fe10c2af1093c26699db6c9..8567e3988a70fbd5643322425162474a
                                          }).max().orElse(0);
                                      } else {
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftChunk.java b/src/main/java/org/bukkit/craftbukkit/CraftChunk.java
-index f7e19bb7d2ff8f8aaf061cec16462913d77c10d5..44a009b1754d7e25f0547993baf084a0754fbe45 100644
+index edb726d7db0c2e1c276458c997bbfed9b76b69d4..89e32591e9b0e83cae5318ec698074a926fbd64c 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftChunk.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftChunk.java
 @@ -208,7 +208,7 @@ public class CraftChunk implements Chunk {
@@ -405,7 +405,7 @@ index f7e19bb7d2ff8f8aaf061cec16462913d77c10d5..44a009b1754d7e25f0547993baf084a0
  
      @Override
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index 71dc8ea1de348751ce3e5d0ca5eba277ce5979fc..a9f1d548728e210b275977e15266dfbaa8f3c8e2 100644
+index 68a8915060bb496fb27523391eb1ded098450da3..168a09d592b6ad8c628cd993316fb550094ef46c 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 @@ -1285,7 +1285,7 @@ public final class CraftServer implements Server {
