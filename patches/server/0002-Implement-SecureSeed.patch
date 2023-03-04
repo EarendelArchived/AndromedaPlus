@@ -123,10 +123,10 @@ index e254b2d04e4fc1dc76c26f61ea38aeb27755143f..703af3249c0f34f9301e13cd3d88eeb2
      @Nullable
      public abstract BlockState setBlockState(BlockPos pos, BlockState state, boolean moved);
 diff --git a/src/main/java/net/minecraft/world/level/chunk/ChunkGenerator.java b/src/main/java/net/minecraft/world/level/chunk/ChunkGenerator.java
-index 7e9c388179c75a233d9b179ea1e00428ac65ee99..96a7d2d9fc879d31ec116f842df49213da73440b 100644
+index 130ac7164c63374120ca2cdfbb1f6c3eefb4b7a5..87cc8dbe30e271c8f9cc2d9ed96bb1c6fbfad7d4 100644
 --- a/src/main/java/net/minecraft/world/level/chunk/ChunkGenerator.java
 +++ b/src/main/java/net/minecraft/world/level/chunk/ChunkGenerator.java
-@@ -338,7 +338,7 @@ public abstract class ChunkGenerator {
+@@ -336,7 +336,7 @@ public abstract class ChunkGenerator {
                  return structure.step().ordinal();
              }));
              List<FeatureSorter.StepFeatureData> list = (List) this.featuresPerStep.get();
@@ -135,7 +135,7 @@ index 7e9c388179c75a233d9b179ea1e00428ac65ee99..96a7d2d9fc879d31ec116f842df49213
              long i = seededrandom.setDecorationSeed(generatoraccessseed.getSeed(), blockposition.getX(), blockposition.getZ());
              Set<Holder<Biome>> set = new ObjectArraySet();
  
-@@ -577,7 +577,7 @@ public abstract class ChunkGenerator {
+@@ -575,7 +575,7 @@ public abstract class ChunkGenerator {
                      ArrayList<StructureSet.StructureSelectionEntry> arraylist = new ArrayList(list.size());
  
                      arraylist.addAll(list);
@@ -405,10 +405,10 @@ index edb726d7db0c2e1c276458c997bbfed9b76b69d4..89e32591e9b0e83cae5318ec698074a9
  
      @Override
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index 20d9ab5292d087b8d633e469700e389e20368ea2..8284f60389f1948a8a0f13f3849348df2ece980b 100644
+index d27f7ab3a6dee027051f3fb3090e0622eace8c6e..1ebd3fa5c30af0fd3388abb04e461034ece589ae 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-@@ -1286,7 +1286,7 @@ public final class CraftServer implements Server {
+@@ -1229,7 +1229,7 @@ public final class CraftServer implements Server {
              iregistry = pair.getSecond().dimensions();
          } else {
              LevelSettings worldsettings;
